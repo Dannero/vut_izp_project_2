@@ -17,8 +17,8 @@ Universe_t *uni_array;   //Array of universe members
 
     //RELATION STRUCTURES//
 typedef struct {     //Structure for a relation member 
-    int rel_x;
-    int rel_y;
+    char *rel_x;
+    char *rel_y;
 } Rel_mem;
 
 Rel_mem *rel_array;  //Array of relation members
