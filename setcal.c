@@ -11,12 +11,7 @@ char illegal_strings[6][5] = {"U", "S", "R", "c", "true", "false"};  //Strings u
 
 
 //UNIVERSE STRUCTURES//
-typedef struct {      //Structure for a universe member
-    char *member;
-    int member_num;
-} Universe_t;
-
-Universe_t *uni_array;   //Array of universe members
+char **uni_array;   //Array of universe members
 
 
 //RELATION STRUCTURES//
@@ -25,7 +20,7 @@ typedef struct {     //Structure for a relation member
     char *rel_y;
 } Rel_member_t;
 
-typedef struct {
+typedef struct {        //Relation array
     Rel_member_t *member;
     int rel_size;
 } Rel_t;
@@ -65,69 +60,72 @@ int illegal_parse(char *llegal_strings, char *str) {
 } */
 
         //LOADING THE UNIVERSE LINE//
-int load_uni_line(char *c, FILE **fp) {        
+void load_uni_line(char *c, FILE **fp, bool *uni_load_fail, int *uni_mem_count) {        
     char *buffer = malloc(sizeof(char));
     int str_size = 0;                                                  
-    int str_count = 0;                                                                       
-
-    uni_array = NULL;
+    int str_count = 0;  
+                                                                      
+    uni_array = malloc(sizeof(char));
 
     *c = fgetc(*fp);
     if (*c != ' ') {     //Checks if there's a non-space character after the U character
         fprintf(stderr, "Error: Incorrect input syntax\n");       //Also gets rid of the space :)
-        return -1;
+        *uni_load_fail = true;
     }
 
     while (*c != '\n') {
         *c = fgetc(*fp);
-        printf("%c\n", c);
-        /*
-        if ( (*c < 'A') || ((*c > 'Z') && (*c < 'a')) || (*c > 'z') ) {     //Parses non-alphabetical characters
-            fprintf(stderr, "Error: Non-alphabetical character used\n");    //NEED_FIX
-            return -1;
+        printf("Nacitavany char: %c \n", *c);
+        
+        if ( ((*c < 'A') || ((*c > 'Z') && (*c < 'a')) || (*c > 'z')) && (*c != ' ') ) {     //Parses non-alphabetical characters
+            fprintf(stderr, "Error: Non-alphabetical character used\n");   
             break;
-        } */
+        } 
+
         if (*c != ' ') {        //Loading chars into buffer while the char in file isn't a SPACE char
-            ++str_size;
-            buffer = (char *) realloc(buffer, str_size * sizeof(char));
+            str_size++;
+            buffer = (char *) realloc(buffer, str_size * sizeof(char));                              
             buffer[str_size - 1] = *c;
+            printf("String size: %d\n", str_size);
+            printf("Buffer: %s\n", buffer);
         }
 
         if (*c == ' ') {        //Loading string into the Universe member structure, resetting buffer
-            uni_array = (Universe_t *) realloc(uni_array, str_count * sizeof(Universe_t));
-            uni_array[str_count].member = malloc(str_size * sizeof(char));
-            strcpy(uni_array[str_count].member, buffer);
-            uni_array[str_count].member_num = str_count;
+            uni_array = (char **) realloc(uni_array, str_count * sizeof(str_size * sizeof(char)));
+            strcpy(uni_array[str_count], buffer);
+            
 
             for (int i = 0; i < str_count; i++) {       //Comparing strings with previous strings saved into the array
-                if (strcmp(uni_array[str_count].member, uni_array[i].member) == 0) {
+                if (strcmp(uni_array[str_count], uni_array[i]) == 0) {
                     fprintf(stderr, "Error: Multiple equal universe members\n");
-                    return -1;
+                    *uni_load_fail = true;
                     break;
                 }        
             }
-
-            //NEED FIX
-            //if (illegal_parse(illegal_strings, buffer) == 0) {
+            
             for (int i = 0; i < illegal_str_count; i++) {
                 if (strcmp(buffer, illegal_strings[i]) == 0) {
             
                     fprintf(stderr, "Error: Illegal strings used\n");
-                    return -1;
+                    *uni_load_fail = true;
                     break;
                 }
             }
 
+            printf("%s", *buffer);
+
             ++str_count;
             str_size  = 0;
-            buffer = NULL;
+            free(buffer);
         }
 
     }
+    *uni_mem_count = str_count; 
     free(buffer);
 
-    return str_count;
-}
+} 
+
+
 
 /*                                          //SET LINE LOADING WIP
 int load_set_line(char *c, FILE **fp) {
@@ -156,6 +154,7 @@ int main(int argc, char* argv[])   {
     int line_count = 1;  //Number of lines
     int line_pos = 0;    //Position in a line
     int uni_mem_count;   //Number of members in universe
+    bool uni_load_fail = false;
 
     while( ! (feof(fp)) )  {
         char c = fgetc(fp);
@@ -167,11 +166,14 @@ int main(int argc, char* argv[])   {
 
                 case 'U':               //Universe Function
                     if (line_count == 1) {
-                        if (load_uni_line(&c, &fp) == -1)
+                        
+                        /*if (load_uni_line(&c, &fp) == -1)
                             return EXIT_FAILURE;
                         
-                        else uni_mem_count = (load_uni_line(&c, &fp));
-                        
+                        else uni_mem_count = (load_uni_line(&c, &fp)); */
+
+                        load_uni_line(&c, &fp, &uni_load_fail, &uni_mem_count);
+                        if (uni_load_fail == true) return EXIT_FAILURE;
                     }
 
                     else {
@@ -227,8 +229,10 @@ int main(int argc, char* argv[])   {
     }
 
     for (int i = 0; i <= uni_mem_count; i++) {
-        printf("%s, ",uni_array[i].member);
+        printf("%s, ",uni_array[i]);
     }
+
+    printf("%d", uni_mem_count);
 
     return 0;
 }
