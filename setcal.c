@@ -92,13 +92,6 @@ int char_check (char c) {                   //Checks if char is alphabetical
     return 1;
 }
 
-void buffer_alloc_check (bool *alloc_fail, char *buffer) {  //Checking buffer allocation success
-    if (buffer == NULL) {
-        fprintf(stderr, "Error occured during buffer memory allocation\n");
-        *alloc_fail = true;        
-    }
-}
-
  
         //LOADING UNIVERSE//
 void load_universe(char *str_line, bool *uni_load_fail, Universe_t *uni_array) {
@@ -107,8 +100,10 @@ void load_universe(char *str_line, bool *uni_load_fail, Universe_t *uni_array) {
     buffer[0] = '\0';
     uni_array->member_count  = 0;
     uni_array->uni_member = malloc(sizeof(char));  //1 row * 1 column = 1 char
-    buffer_alloc_check(&uni_load_fail, &buffer);
-
+    if (buffer == NULL) {
+        fprintf(stderr, "Error occured during buffer memory allocation\n");
+        *uni_load_fail = true;
+    }
 
     if (uni_array->uni_member == NULL) {
         fprintf(stderr, "Error occured during universe array memory allocation\n");
@@ -125,11 +120,12 @@ void load_universe(char *str_line, bool *uni_load_fail, Universe_t *uni_array) {
 
         if (c != ' ') {             //Loading char into buffer is char is not SPACE
             buffer = (char*) realloc(buffer, strlen(buffer) + sizeof(char)*2);
-            buffer_alloc_check(&uni_load_fail, &buffer);
-            
+            if (buffer == NULL) {
+                fprintf(stderr, "Error occured during buffer memory allocation\n");
+                *uni_load_fail = true;
+            }
             if (strlen(buffer) > max_member_len) {
                 fprintf(stderr, "Error: Universe member exceeding max. length of 30\n");
-                *uni_load_fail = true;
             }
             strncat(buffer, &c, 1);
         }
@@ -192,19 +188,25 @@ void load_set (char *str_line, bool *set_load_fail, Set_t *set_array, Universe_t
     buffer[0] = '\0';
     set_array->set_size = 0;
     set_array->member = malloc(sizeof(Set_member_t));
-    buffer_alloc_check(&set_load_fail, &buffer);
+    if (buffer == NULL) {
+        fprintf(stderr, "Error occured during buffer memory allocation\n");
+        *set_load_fail = true;
+    }
 
     if (set_array->member == NULL) {
         fprintf(stderr, "Error occured during set array memory allocation\n");
         *set_load_fail = true;
     }
 
-    for (unsigned int i = 2; i <= strlen(str_line); i++) {
+    for (unsigned i = 2; i <= strlen(str_line); i++) {
         c = str_line[i];
-
+        //printf("%c\n", c);
         if (c != ' ') {
             buffer = (char*) realloc(buffer, strlen(buffer) + sizeof(char)*2);
-            buffer_alloc_check(&set_load_fail, &buffer);
+            if (buffer == NULL) {
+                fprintf(stderr, "Error occured during buffer memory allocation\n");
+                *set_load_fail = true;
+            }
             strncat(buffer, &c, 1);
         }
 
@@ -217,20 +219,20 @@ void load_set (char *str_line, bool *set_load_fail, Set_t *set_array, Universe_t
                 fprintf(stderr, "Error occured during set array memory allocation\n");
                 *set_load_fail = true;
             }
+
             if (set_array->member[set_array->set_size - 1].set_mem == NULL) {
                 fprintf(stderr, "Error occured during set member memory allocation\n");
                 *set_load_fail = true;
             }
 
 
-            strcpy(set_array->member[set_array->set_size - 1].set_mem, buffer);     
+            strcpy(set_array->member[set_array->set_size - 1].set_mem, buffer);
 
             
             for (int i = 0; i < set_array->set_size - 1; i++) {  //Comparing strings with previous strings saved into the array
                 if (strcmp(set_array->member[set_array->set_size - 1].set_mem, set_array->member[i].set_mem) == 0) {
                     fprintf(stderr, "Error: Multiple equal set members\n");
                     *set_load_fail = true;
-                    break;
                 }
             }
             
@@ -244,7 +246,6 @@ void load_set (char *str_line, bool *set_load_fail, Set_t *set_array, Universe_t
             if (uni_cmp_success == false) {
                 fprintf(stderr, "Error: Set member not declared in universe\n");
                 *set_load_fail = true;
-                break;
             }
             buffer = realloc(buffer, sizeof(char));
             buffer[0] = '\0';
@@ -260,80 +261,6 @@ void print_set(Set_t *set_array) {
         printf("%s ", set_array->member[i].set_mem);
     }
     printf("\n");
-}
-
-
-void load_relation(char *str_line, bool *rel_load_fail, Rel_t *rel_array, Universe_t *uni_array) {
-    char c;
-    bool bracket = false;       //Strings can only be loaded if they are inside of brackets in input
-    char *buffer = malloc(sizeof(char));    
-    buffer[0] = '\0';
-    rel_array->rel_size = 0;
-    rel_array->member = malloc(sizeof(Rel_member_t));
-    buffer_alloc_check(&rel_load_fail, &buffer);
-
-    if (rel_array->member == NULL) {
-        fprintf(stderr, "Error occured during relation array memory allocation\n");
-        *rel_load_fail = true;
-    }
-
-    for (unsigned int i = 2; i <= strlen(str_line); i++) {
-        c = str_line[i];
-
-        if (c == '(') 
-            bracket = true;
-
-        if (c != ' ' && bracket == true) {
-            buffer = (char*) realloc(buffer, strlen(buffer) + sizeof(int)*2);
-            buffer_alloc_check(&rel_load_fail, &buffer);
-            strncat(buffer, &c, 1);
-        }
-
-        if (c == ' ' || bracket == true) {
-            rel_array->rel_size++;
-            rel_array->member = realloc(rel_array->member, rel_array->rel_size * sizeof(Rel_member_t));
-            rel_array->member[rel_array->rel_size - 1].rel_x = malloc(strlen(buffer) * sizeof(char));
-
-            if (rel_array->member == NULL) {
-                fprintf(stderr, "Error occured during relation array memory allocation\n");
-                *rel_load_fail;
-                break;
-            }    
-            if (rel_array->member[rel_array->rel_size - 1].rel_x == NULL) {
-                fprintf(stderr, "Error occured during relation member memory allocation\n");
-                *rel_load_fail = true;
-                break;
-            }
-
-            strcpy(rel_array->member[rel_array->rel_size - 1].rel_x, buffer);
-        }
-
-        if (c == ')') {
-            rel_array->rel_size++;
-            //rel_array->member = realloc(rel_array->member, rel_array->rel_size * sizeof(Rel_member_t));
-            rel_array->member[rel_array->rel_size - 1].rel_y = malloc(strlen(buffer) * sizeof(char));
-
-            if (rel_array->member == NULL) {
-                fprintf(stderr, "Error occured during relation array memory allocation\n");
-                *rel_load_fail;
-                break;
-            }    
-            if (rel_array->member[rel_array->rel_size - 1].rel_y == NULL) {
-                fprintf(stderr, "Error occured during relation member memory allocation\n");
-                *rel_load_fail = true;
-                break;
-            }
-            strcpy(rel_array->member[rel_array->rel_size - 1].rel_y, buffer);
-            bracket = false;
-        }
-
-        if (c != ' ' && bracket == false) {
-            fprintf(stderr, "Error: incorrect relation input syntax\n");
-            *rel_load_fail = true;
-            break;
-        }
-
-    }
 }
     
 
@@ -356,18 +283,14 @@ int main(int argc, char* argv[])   {
 
     (void) argc;
     (void) argv;
-
-    int line_count = 0;  //Number of all lines
+    int line_count = 0;  //Number of lines
     int set_count = 0;   //Number of set lines
-    int rel_count = 0;   //Number of relation lines
 
     bool uni_load_fail = false;
     bool set_load_fail = false;
-    bool rel_load_fail = false;
-    
     Universe_t uni_array;
+    //Set_t *sets_array = malloc(sizeof(Set_t));
     Set_t *sets_array;
-    Rel_t *rels_array;
 
     while (! (feof(fp))) {
         char *str_line = load_line(&fp);
@@ -424,9 +347,7 @@ int main(int argc, char* argv[])   {
 
             case 'R':               //Relation Function
                 if (line_count != 1) {
-                    rel_count++;
-                    rels_array = realloc(rels_array, rel_count * sizeof(Rel_t));
-                    rels_array[rel_count - 1].rel_index = line_count;
+                        return EXIT_FAILURE;
                     //relation_load_function
 
 
