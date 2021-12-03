@@ -82,16 +82,16 @@ void set_card(Set_t * set){
 }
 
 //print complement of set to the universe
-void set_complement(Set_t * setA, Set_t * setB){
+void set_complement(Set_t * setA, Universe_t * uni){
     printf("S");
-    for(int i = 0; i < setB->set_size; i++) {
+    for(int i = 0; i < uni->member_count; i++) {
         int cmp = 0;
         for (int j = 0; j < setA->set_size; j++) {
-            if(strcmp(setB->member[i].set_mem, setA->member[j].set_mem) == 0){
+            if(strcmp(uni->uni_member[i], setA->member[j].set_mem) == 0){
                 cmp = 1;
             }
             if(cmp != 1 && j == (setA->set_size - 1)) {
-                printf(" %s", setB->member[i].set_mem);
+                printf(" %s", uni->uni_member[i]);
                 break;
             }
         }
