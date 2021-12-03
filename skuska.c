@@ -8,7 +8,10 @@
 #define illegal_str_count 6
 #define max_line_count 1000
 
-char illegal_strings[6][5] = {"U", "S", "R", "c", "true", "false"};  //Strings illegal to be used as universe members
+char illegal_strings[21][13] = {"true", "false", "empty", "card", "complement", "union", //Strings illegal to be used as universe members
+                                "intersect", "minus", "subseteq", "subset", "equals",
+                                "reflexive", "symmetric", "antisymmetric", "transitive", 
+                                "domain", "codomain", "injective", "surjective", "bijective"};  
 
 
 //UNIVERSE STRUCTURES//  
@@ -55,12 +58,11 @@ Rel_t *rels_array;
 ////COMMAND STRUCTURE/////
 typedef struct {        //Structure for command loading
     char *command_string;
-    long  command_arg[2];
+    long  command_arg[3];
     int size;
  } Command_t;
 
- Command_t command;
-
+ 
 
 
     //////SET FUNCTIONS//////
@@ -273,11 +275,8 @@ void load_universe(char *str_line, bool *uni_load_fail, Universe_t *uni_array) {
     buffer[0] = '\0';
     uni_array->member_count  = 0;
     uni_array->uni_member = malloc(sizeof(char));  //1 row * 1 column = 1 char
-    //buffer_alloc_check(uni_load_fail, buffer);
-    if (buffer == NULL) {
-        fprintf(stderr, "Error occured during buffer memory allocation\n");
-        *uni_load_fail = true;        
-    }
+    buffer_alloc_check(uni_load_fail, buffer);
+
 
     if (uni_array->uni_member == NULL) {
         fprintf(stderr, "Error occured during universe array memory allocation\n");
@@ -294,11 +293,8 @@ void load_universe(char *str_line, bool *uni_load_fail, Universe_t *uni_array) {
 
         if (c != ' ') {             //Loading char into buffer is char is not SPACE
             buffer = (char*) realloc(buffer, strlen(buffer) + sizeof(char)*2);
-            //buffer_alloc_check(uni_load_fail, buffer);
-            if (buffer == NULL) {
-                fprintf(stderr, "Error occured during buffer memory allocation\n");
-                *uni_load_fail = true;        
-            }            
+            buffer_alloc_check(uni_load_fail, buffer);
+          
             if (strlen(buffer) > max_member_len) {
                 fprintf(stderr, "Error: Universe member exceeding max. length of 30\n");
                 *uni_load_fail = true;
@@ -364,11 +360,8 @@ void load_set (char *str_line, bool *set_load_fail, Set_t *set_array, Universe_t
     buffer[0] = '\0';
     set_array->set_size = 0;
     set_array->member = malloc(sizeof(Set_member_t));
-    //buffer_alloc_check(set_load_fail, buffer);
-    if (buffer == NULL) {
-        fprintf(stderr, "Error occured during buffer memory allocation\n");
-        *set_load_fail = true;        
-    }
+    buffer_alloc_check(set_load_fail, buffer);
+
     if (set_array->member == NULL) {
         fprintf(stderr, "Error occured during set array memory allocation\n");
         *set_load_fail = true;
@@ -450,32 +443,23 @@ void load_relation(char *str_line, bool *rel_load_fail, Rel_t *rel_array, Univer
     buffer[0] = '\0';
     rel_array->rel_size = 0;
     rel_array->member = malloc(sizeof(Rel_member_t));
-    //buffer_alloc_check(rel_load_fail, buffer);
-    if (buffer == NULL) {
-        fprintf(stderr, "Error occured during buffer memory allocation\n");
-        *rel_load_fail = true;        
-    }
+    buffer_alloc_check(rel_load_fail, buffer);
+
     if (rel_array->member == NULL) {
         fprintf(stderr, "Error occured during relation array memory allocation\n");
         *rel_load_fail = true;
     }
+
     //loading and parsing relations from line 
     for (unsigned int i = 2; i <= strlen(str_line); i++) {
         c = str_line[i];
-        //printf("%c\n", c);
         if (c == '(') 
             bracket = true;
 
         if (c != ' ' && c != '(' && c != ')' && bracket == true) {
-            //printf("%c\n", c);
             buffer = (char*) realloc(buffer, strlen(buffer) + sizeof(int)*2);
-            //buffer_alloc_check(rel_load_fail, buffer);
-            if (buffer == NULL) {
-                fprintf(stderr, "Error occured during buffer memory allocation\n");
-                *rel_load_fail = true;        
-            }
+            buffer_alloc_check(rel_load_fail, buffer);
             strncat(buffer, &c, 1);
-            //printf("%s\n", buffer);
         }
 
         if (c == ' ' && bracket == true) {
@@ -501,20 +485,19 @@ void load_relation(char *str_line, bool *rel_load_fail, Rel_t *rel_array, Univer
                 }            
             }
             if (uni_cmp_success == false) {
-                //printf("buff %s\n", buffer);
                 fprintf(stderr, "Error: Relation member x not declared in universe\n");
                 *rel_load_fail = true;
                 break;
             }
-            //printf("%s x\n", buffer);
+
             strcpy(rel_array->member[rel_array->rel_size - 1].rel_x, buffer);
             //uni_cmp_success = false;
             buffer = realloc(buffer, sizeof(char));
+            buffer_alloc_check(rel_load_fail, buffer);
             buffer[0] = '\0';            
         }
 
         if (c == ')' && bracket == true) {
-            //rel_array->rel_size++;
             //rel_array->member = realloc(rel_array->member, rel_array->rel_size * sizeof(Rel_member_t));
             rel_array->member[rel_array->rel_size - 1].rel_y = malloc(strlen(buffer) * sizeof(char));
 
@@ -530,7 +513,6 @@ void load_relation(char *str_line, bool *rel_load_fail, Rel_t *rel_array, Univer
             }
             for (int i = 0; i < uni_array->member_count; i++) {  //Checking if set member is declared in Universe
                 if (strcmp(buffer, uni_array->uni_member[i]) == 0) {
-                    //printf("%s buff %s uni\n", buffer, uni_array->uni_member[i]);
                     rel_array->member[rel_array->rel_size - 1].rel_y_index = i;
                     uni_cmp_success = true;
                     break;
@@ -541,23 +523,21 @@ void load_relation(char *str_line, bool *rel_load_fail, Rel_t *rel_array, Univer
                 *rel_load_fail = true;
                 break;
             }  
-            //printf("%s y\n", buffer);  
             strcpy(rel_array->member[rel_array->rel_size - 1].rel_y, buffer);
             bracket = false;
             buffer = realloc(buffer, sizeof(char));
+            buffer_alloc_check(rel_load_fail, buffer);
             buffer[0] = '\0';
         }
 
         if (c != ' ' && c != ')' && c != '\0' && bracket == false) {
-            //printf("%s buff\n", buffer);
             fprintf(stderr, "Error: incorrect relation input syntax\n");
             *rel_load_fail = true;
             break;
         }
 
     }
-    //printf("%s rel\n",rel_array->member[rel_array->rel_size - 1].rel_x);
-    //printf("%s rel\n",rel_array->member[rel_array->rel_size - 1].rel_y);
+
 
     for (int i = 0; i < rel_array->rel_size - 1; i++) {
         if (strcmp(rel_array->member[rel_array->rel_size - 1].rel_x, rel_array->member[i].rel_x) == 0 
@@ -566,7 +546,6 @@ void load_relation(char *str_line, bool *rel_load_fail, Rel_t *rel_array, Univer
             *rel_load_fail = true;
         }
     }
-    //printf("%s %s\n", rel_array->member[rel_array->rel_size - 1].rel_x, rel_array->member[rel_array->rel_size - 1].rel_y);
     free(buffer);
 }
 
@@ -585,7 +564,7 @@ void load_command(char *str_line, bool *command_load_fail, Command_t *command) {
     
 
     char *ptr;
-    //buffer_alloc_check
+    buffer_alloc_check(command_load_fail, buffer);
     buffer[0] = '\0';
 
     for (unsigned i = 2; i <= strlen(str_line); i++) {
@@ -593,21 +572,21 @@ void load_command(char *str_line, bool *command_load_fail, Command_t *command) {
         
         if (c != ' ') {
             buffer = (char *) realloc(buffer, strlen(buffer) + sizeof(char)*2);
-            //buffer_alloc_check()
+            buffer_alloc_check(command_load_fail, buffer);
             strncat(buffer, &c, 1);
         }
 
         if (c == ' ' || c == '\0') {
             if (command_loaded == false) {
                 //command->command_arg = malloc(strlen(buffer) * sizeof(char));
-                strcpy(command->command_arg, buffer);
+                strcpy(command->command_string, buffer);
                 command_loaded = true;
                 continue;
             }
 
             if (command_loaded == true) {
                 command->size++;
-                command->command_arg[command->size - 1] = strtoul(command->command_arg[command->size - 1], &ptr, 10);
+                command->command_arg[command->size - 1] = strtoul(buffer, &ptr, 10);
                 if(command->command_arg[command->size - 1] == 0) {
                     fprintf(stderr, "Error: wrong syntax in command line\n");
                     *command_load_fail = true;
@@ -642,9 +621,9 @@ int main(int argc, char* argv[])   {
     (void) argc;
     (void) argv;
 
-    int line_count = 0;  //Number of all lines
-    int set_count = 0;   //Number of set lines
-    int rel_count = 0;   //Number of relation lines
+    long line_count = 0;  //Number of all lines
+    long set_count = 0;   //Number of set lines
+    long rel_count = 0;   //Number of relation lines
 
     bool uni_load_fail = false;
     bool set_load_fail = false;
@@ -653,6 +632,8 @@ int main(int argc, char* argv[])   {
     
     Set_t *sets_array = malloc(sizeof(Set_t));
     Rel_t *rels_array = malloc(sizeof(Rel_t));
+    Command_t command;
+
 
 
     while (! (feof(fp))) {
@@ -723,7 +704,7 @@ int main(int argc, char* argv[])   {
                         return EXIT_FAILURE;
                     }
                     else 
-                        print_relation(&rels_array[set_count - 1]);
+                        print_relation(&rels_array[rel_count - 1]);
                 }
 
                 else {
@@ -735,7 +716,7 @@ int main(int argc, char* argv[])   {
             case 'C':               //Command Function
                 if (line_count !=1) {
                     load_command(str_line, &command_load_fail, &command);
-                    printf("%s %d %ld %ld\n", command.command_string, command.size, command.command_arg[0], command.command_arg[1]);
+                    //printf("%s %d %ld %ld\n", command.command_string, command.size, command.command_arg[0], command.command_arg[1]);
                     
                     //SET FUNCTIONS WITH 1 ARGUMENT//
                     if (strcmp("empty", command.command_string) == 0) {
