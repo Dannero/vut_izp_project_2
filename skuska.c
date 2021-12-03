@@ -266,6 +266,14 @@ void buffer_alloc_check (bool *alloc_fail, char *buffer) {  //Checking buffer al
     }
 }
 
+int command_arg_check (Command_t * command, int count) {
+    if (command->size > count) {
+        fprintf(stderr, "Error: incorrect number of arguments in command call\n");
+        return 0;
+    }
+    return 1;
+}
+
 
  
         //LOADING UNIVERSE//
@@ -345,9 +353,9 @@ void load_universe(char *str_line, bool *uni_load_fail, Universe_t *uni_array) {
 
 
 void print_universe (Universe_t *uni_array) {
-    printf("U ");
+    printf("U");
     for (int i = 0; i < uni_array->member_count; i++) {
-        printf("%s ", uni_array->uni_member[i]);
+        printf(" %s", uni_array->uni_member[i]);
     }
     printf("\n");
 }
@@ -427,9 +435,9 @@ void load_set (char *str_line, bool *set_load_fail, Set_t *set_array, Universe_t
 
 
 void print_set(Set_t *set_array) {
-    printf("S ");
+    printf("S");
     for (int i = 0; i < set_array->set_size; i++) {
-        printf("%s ", set_array->member[i].set_mem);
+        printf(" %s", set_array->member[i].set_mem);
     }
     printf("\n");
 }
@@ -550,9 +558,9 @@ void load_relation(char *str_line, bool *rel_load_fail, Rel_t *rel_array, Univer
 }
 
 void print_relation(Rel_t *rel_array) {
-    printf("R ");
+    printf("R");
     for (int i = 0; i < rel_array->rel_size; i++) {
-        printf("(%s %s) ",rel_array->member[i].rel_x, rel_array->member[i].rel_y);
+        printf(" (%s %s)",rel_array->member[i].rel_x, rel_array->member[i].rel_y);
     }
     printf("\n");
 }
@@ -720,20 +728,22 @@ int main(int argc, char* argv[])   {
                     
                     //SET FUNCTIONS WITH 1 ARGUMENT//
                     if (strcmp("empty", command.command_string) == 0) {
-                        if (command.size > 1) {
-                            fprintf(stderr, "Error: Incorrect number of arguments in command call\n");
+                        if (command_arg_check(&command, 1) == 0) 
                             return EXIT_FAILURE;
-                        }
                         else set_empty(&sets_array[command.command_arg[0]]);
                     }
 
                     if (strcmp("card", command.command_string) == 0) {
-                        if (command.size > 1) {
-                            fprintf(stderr, "Error: Incorrect number of arguments in command call\n");
-                            return EXIT_FAILURE;
-                        }
+                        if (command_arg_check(&command, 1) == 0)
+                            return EXIT_FAILURE;  
                         else set_card(&sets_array[command.command_arg[0]]);
                     }
+
+                    if (strcmp("complement", command.command_string) == 0) {
+                        //
+                    }
+
+
 
 
                     //find_and_do_command
