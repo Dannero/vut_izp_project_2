@@ -1,0 +1,152 @@
+
+
+
+
+/////FUNKCE//////////
+
+
+
+//RELATION FUNCTION DOMAIN
+void rel_domain(Rel_t* relA)
+{
+    for (int n= 0; n < relA->rel_size; n++)
+    {
+        printf("%s",(relA->member + n)->rel_x);
+    }
+    printf("\n");
+}
+//RELATION FUNCTION CODOMAIN
+
+void rel_codomain(Rel_t* relA)
+{
+    for (int n = 0; n < relA->rel_size; n++)
+    {
+        printf("%s",(relA->member+ n)->rel_y);
+    }
+    printf("\n");
+}
+
+//RELATION FUNCTION INJECTIVE
+
+int rel_inject(Rel_t *r)
+{
+    int *pv;
+    int b = 1;
+    int items = uni_array.member_count;
+
+    pv = (int*)malloc(items * sizeof(int));
+    for (int n = 0; n < items; n++)
+    {
+        pv[n] = 0;
+    }
+
+    for (int n = 0; n < r->rel_size; n++)
+    {
+        ++pv[(r->member+n)->rel_y_index];
+        if (pv[(r->member+n)->rel_y_index] > 1)
+        {
+            b = 0;
+            printf("false\n");
+            break;
+        }
+    }
+
+    if(b != 0) printf("true\n");
+    free(pv);
+
+    return b;
+}
+
+//RELATION FUNCTION SURJECTIVE
+
+int rel_surject(Rel_t *r)
+{
+    int *pv;
+    int b = 1;
+    int items = uni_array.member_count;
+
+    pv = (int*)malloc(items * sizeof(int));
+    for (int n = 0; n < items; n++)
+    {
+        pv[n] = 0;
+    }
+
+    for (int n = 0; n < r->rel_size; n++)
+    {
+        ++pv[(r->member+n)->rel_y_index];
+
+    }
+    for (int n = 0; n < r->rel_size; n++)
+    {
+        if (pv[(r->member + n)->rel_y_index] == 0)
+        {
+            b = 0;
+            break;
+
+        }
+    }
+
+    if(b != 0) printf("true\n");
+    else printf("false\n");
+    free(pv);
+
+    return b;
+
+}
+
+//RELATION FUNCTION BIJECTIVE
+
+int rel_biject(Rel_t *r)
+{
+    if(rel_inject(r) && rel_surject(r))
+    {
+        printf("true\n");
+    }
+    else
+    {
+        printf("false\n");
+    }
+}
+
+
+
+
+
+
+
+//////VOLANI FUNKCI//////////
+
+
+                    if (strcmp("domain", command.command_string) == 0) {
+                        if (command_arg_check(&command, 1) == 0)
+                            return EXIT_FAILURE;
+                        else rel_domain(&rels_array[command.command_arg[0]]);
+
+                    }
+
+                    if (strcmp("codomain", command.command_string) == 0) {
+                        if (command_arg_check(&command, 1) == 0)
+                            return EXIT_FAILURE;
+                        else rel_codomain(&rels_array[command.command_arg[0]]);
+
+                    }
+
+                    if (strcmp("injective", command.command_string) == 0) {
+                        if (command_arg_check(&command, 1) == 0)
+                            return EXIT_FAILURE;
+                        else rel_inject(&rels_array[command.command_arg[0]]);
+
+                    }
+                    if (strcmp("surjective", command.command_string) == 0) {
+                        if (command_arg_check(&command, 1) == 0)
+                            return EXIT_FAILURE;
+                        else rel_surject(&rels_array[command.command_arg[0]]);
+
+                    }
+
+                    if (strcmp("bijective", command.command_string) == 0) {
+                        if (command_arg_check(&command, 1) == 0)
+                            return EXIT_FAILURE;
+                        else rel_biject(&rels_array[command.command_arg[0]]);
+
+                    }
