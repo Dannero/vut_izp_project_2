@@ -33,10 +33,11 @@ typedef struct {        //Structure for a set member
 typedef struct {        
     Set_member_t *member;
     int set_size;
-    int set_index;
+    long set_index;
 } Set_t;
 
 Set_t *sets_array;
+
 
 
 //RELATION STRUCTURES//
@@ -266,7 +267,7 @@ void buffer_alloc_check (bool *alloc_fail, char *buffer) {  //Checking buffer al
     }
 }
 
-int command_arg_check (Command_t * command, int count) {
+int command_arg_check (Command_t * command, int count) {    //Checking the correct number of arguments in command call
     if (command->size > count) {
         fprintf(stderr, "Error: incorrect number of arguments in command call\n");
         return 0;
@@ -380,7 +381,7 @@ void load_set (char *str_line, bool *set_load_fail, Set_t *set_array, Universe_t
 
         if (c != ' ') {
             buffer = (char*) realloc(buffer, strlen(buffer) + sizeof(char)*2);
-            //buffer_alloc_check(set_load_fail, buffer);
+            buffer_alloc_check(set_load_fail, buffer);
             if (buffer == NULL) {
                 fprintf(stderr, "Error occured during buffer memory allocation\n");
                 *set_load_fail = true;        
@@ -465,7 +466,7 @@ void load_relation(char *str_line, bool *rel_load_fail, Rel_t *rel_array, Univer
             bracket = true;
 
         if (c != ' ' && c != '(' && c != ')' && bracket == true) {
-            buffer = (char*) realloc(buffer, strlen(buffer) + sizeof(int)*2);
+            buffer = (char*) realloc(buffer, strlen(buffer) + sizeof(char)*2);
             buffer_alloc_check(rel_load_fail, buffer);
             strncat(buffer, &c, 1);
         }
@@ -506,7 +507,6 @@ void load_relation(char *str_line, bool *rel_load_fail, Rel_t *rel_array, Univer
         }
 
         if (c == ')' && bracket == true) {
-            //rel_array->member = realloc(rel_array->member, rel_array->rel_size * sizeof(Rel_member_t));
             rel_array->member[rel_array->rel_size - 1].rel_y = malloc(strlen(buffer) * sizeof(char));
 
             if (rel_array->member == NULL) {
@@ -567,47 +567,58 @@ void print_relation(Rel_t *rel_array) {
     ////LOADING COMMAND LINE/////
 void load_command(char *str_line, bool *command_load_fail, Command_t *command) {
     char  c;
-    char *buffer = malloc(sizeof(char));
     bool command_loaded = false;
-    
-
     char *ptr;
-    buffer_alloc_check(command_load_fail, buffer);
+    char *buffer = malloc(sizeof(char));
     buffer[0] = '\0';
+    buffer_alloc_check(command_load_fail, buffer); 
+    command->size = 0;   
 
     for (unsigned i = 2; i <= strlen(str_line); i++) {
         c = str_line[i];
         
-        if (c != ' ') {
-            buffer = (char *) realloc(buffer, strlen(buffer) + sizeof(char)*2);
+        if (c != ' ' && c != '\0') {
+            buffer = (char*) realloc(buffer, strlen(buffer) + sizeof(char)*2);
             buffer_alloc_check(command_load_fail, buffer);
             strncat(buffer, &c, 1);
         }
 
         if (c == ' ' || c == '\0') {
-            if (command_loaded == false) {
-                //command->command_arg = malloc(strlen(buffer) * sizeof(char));
-                strcpy(command->command_string, buffer);
-                command_loaded = true;
-                continue;
-            }
-
             if (command_loaded == true) {
                 command->size++;
-                command->command_arg[command->size - 1] = strtoul(buffer, &ptr, 10);
+                command->command_arg[command->size - 1] = strtol(buffer, &ptr, 10);
                 if(command->command_arg[command->size - 1] == 0) {
                     fprintf(stderr, "Error: wrong syntax in command line\n");
                     *command_load_fail = true;
                 }
             }
 
+            if (command_loaded == false) {
+                command->command_string = malloc(strlen(buffer) * sizeof(char));
+                strcpy(command->command_string, buffer);
+                command_loaded = true;
+            }
+
+            buffer = realloc(buffer, sizeof(char));
+            buffer[0] = '\0';    
         }
-    buffer = realloc(buffer, sizeof(char));
-    buffer[0] = '\0';
     }
-free(buffer);
+    free(buffer);
 }
     
+
+long set_index_check(Command_t command, Set_t * sets_array, long set_count, int arg_num) {
+    bool success = false;
+    for (long i = 0; i < set_count; i++) {
+        if (command.command_arg[arg_num] == sets_array[i].set_index) {
+            success = true;
+            return i;
+        }
+    }
+    if (success == false) 
+        fprintf(stderr, "Error: wrong command call argument\n");
+    return -1;
+}
 
         //////MAIN//////
 
@@ -632,6 +643,7 @@ int main(int argc, char* argv[])   {
     long line_count = 0;  //Number of all lines
     long set_count = 0;   //Number of set lines
     long rel_count = 0;   //Number of relation lines
+    long command_count = 0;
 
     bool uni_load_fail = false;
     bool set_load_fail = false;
@@ -640,13 +652,12 @@ int main(int argc, char* argv[])   {
     
     Set_t *sets_array = malloc(sizeof(Set_t));
     Rel_t *rels_array = malloc(sizeof(Rel_t));
-    Command_t command;
+    Command_t * commands = malloc(sizeof(Command_t));
 
 
 
     while (! (feof(fp))) {
         char *str_line = load_line(&fp);
-        //printf("%s\n", str_line);
         line_count++;
 
         if (line_count > max_line_count) {      //Checking the number of lines in file
@@ -657,7 +668,6 @@ int main(int argc, char* argv[])   {
         if (! (second_char_check(str_line))) 
             return EXIT_FAILURE;
 
-        //printf("%c\n", str_line[0]);
         switch(str_line[0]) {
             case 'U':
                 if (line_count == 1) {
@@ -679,7 +689,6 @@ int main(int argc, char* argv[])   {
             case 'S':               //Set Function
                 if (line_count != 1) {
                     set_count++;
-                    
                     sets_array = realloc(sets_array, set_count * sizeof(Set_t));
                     if (sets_array == NULL) {
                         fprintf(stderr, "Error occured during sets_array allocation\n");
@@ -723,25 +732,116 @@ int main(int argc, char* argv[])   {
 
             case 'C':               //Command Function
                 if (line_count !=1) {
-                    load_command(str_line, &command_load_fail, &command);
-                    //printf("%s %d %ld %ld\n", command.command_string, command.size, command.command_arg[0], command.command_arg[1]);
+                    command_count++;
+                    commands = realloc(commands, command_count * sizeof(Command_t));
+                    load_command(str_line, &command_load_fail, &commands[command_count - 1]);
+
                     
                     //SET FUNCTIONS WITH 1 ARGUMENT//
-                    if (strcmp("empty", command.command_string) == 0) {
-                        if (command_arg_check(&command, 1) == 0) 
+                    if (strcmp("empty", commands[command_count - 1].command_string) == 0) {
+                        if (command_arg_check(&commands[command_count - 1], 1) == 0) 
                             return EXIT_FAILURE;
-                        else set_empty(&sets_array[command.command_arg[0]]);
+                        else {
+                            if (set_index_check(commands[command_count - 1], sets_array, set_count, 0) != -1) 
+                                set_empty(&sets_array[set_index_check(commands[command_count - 1], sets_array, set_count, 0)]);
+                            else return EXIT_FAILURE;                            
+                        }                    
                     }
 
-                    if (strcmp("card", command.command_string) == 0) {
-                        if (command_arg_check(&command, 1) == 0)
+                    if (strcmp("card", commands[command_count - 1].command_string) == 0) {
+                        if (command_arg_check(&commands[command_count - 1], 1) == 0)
                             return EXIT_FAILURE;  
-                        else set_card(&sets_array[command.command_arg[0]]);
+                        else {
+                            if (set_index_check(commands[command_count - 1], sets_array, set_count, 0) != -1) 
+                                set_card(&sets_array[set_index_check(commands[command_count - 1], sets_array, set_count, 0)]);
+                            else return EXIT_FAILURE;
+                        }  
                     }
 
-                    if (strcmp("complement", command.command_string) == 0) {
-                        //
+                    if (strcmp("complement", commands[command_count - 1].command_string) == 0) {
+                        if (command_arg_check(&commands[command_count - 1], 1) == 0) 
+                            return EXIT_FAILURE;
+                        else {
+                            if (set_index_check(commands[command_count - 1], sets_array, set_count, 0) != -1) 
+                                set_complement(&sets_array[set_index_check(commands[command_count - 1], sets_array, set_count, 0)], &uni_array);
+                            else return EXIT_FAILURE;
+                        } 
                     }
+
+                    //SET FUNCTIONS WITH 2 ARGUMENTS//
+                    if (strcmp("union", commands[command_count - 1].command_string) == 0) {
+                        if (command_arg_check(&commands[command_count - 1], 2) == 0)
+                            return EXIT_FAILURE;
+                        else {
+                            if ( (set_index_check(commands[command_count - 1], sets_array, set_count, 0) != -1) 
+                              && (set_index_check(commands[command_count - 1], sets_array, set_count, 1) != -1) )
+                                set_union(&sets_array[set_index_check(commands[command_count - 1], sets_array, set_count, 0)],
+                                          &sets_array[set_index_check(commands[command_count - 1], sets_array, set_count, 1)]);
+                            else return EXIT_FAILURE;
+                        } 
+                    }
+
+                    if (strcmp("intersect", commands[command_count - 1].command_string) == 0) {
+                        if (command_arg_check(&commands[command_count - 1], 2) == 0)
+                            return EXIT_FAILURE;
+                        else {
+                            if ( (set_index_check(commands[command_count - 1], sets_array, set_count, 0) != -1) 
+                              && (set_index_check(commands[command_count - 1], sets_array, set_count, 1) != -1) )
+                                set_intersect(&sets_array[set_index_check(commands[command_count - 1], sets_array, set_count, 0)],
+                                          &sets_array[set_index_check(commands[command_count - 1], sets_array, set_count, 1)]);
+                            else return EXIT_FAILURE;
+                        } 
+                    }
+
+                    if (strcmp("minus", commands[command_count - 1].command_string) == 0) {
+                        if (command_arg_check(&commands[command_count - 1], 2) == 0)
+                            return EXIT_FAILURE;
+                        else {
+                            if ( (set_index_check(commands[command_count - 1], sets_array, set_count, 0) != -1) 
+                              && (set_index_check(commands[command_count - 1], sets_array, set_count, 1) != -1) )
+                                set_minus(&sets_array[set_index_check(commands[command_count - 1], sets_array, set_count, 0)],
+                                          &sets_array[set_index_check(commands[command_count - 1], sets_array, set_count, 1)]);
+                            else return EXIT_FAILURE;
+                        } 
+                    }                
+
+                    if (strcmp("subseteq", commands[command_count - 1].command_string) == 0) {
+                        if (command_arg_check(&commands[command_count - 1], 2) == 0)
+                            return EXIT_FAILURE;
+                        else {
+                            if ( (set_index_check(commands[command_count - 1], sets_array, set_count, 0) != -1) 
+                              && (set_index_check(commands[command_count - 1], sets_array, set_count, 1) != -1) )
+                                set_subseteq(&sets_array[set_index_check(commands[command_count - 1], sets_array, set_count, 0)],
+                                          &sets_array[set_index_check(commands[command_count - 1], sets_array, set_count, 1)]);
+                            else return EXIT_FAILURE;
+                        } 
+                    }     
+
+                    if (strcmp("subset", commands[command_count - 1].command_string) == 0) {
+                        if (command_arg_check(&commands[command_count - 1], 2) == 0)
+                            return EXIT_FAILURE;
+                        else {
+                            if ( (set_index_check(commands[command_count - 1], sets_array, set_count, 0) != -1) 
+                              && (set_index_check(commands[command_count - 1], sets_array, set_count, 1) != -1) )
+                                set_subset(&sets_array[set_index_check(commands[command_count - 1], sets_array, set_count, 0)],
+                                          &sets_array[set_index_check(commands[command_count - 1], sets_array, set_count, 1)]);
+                            else return EXIT_FAILURE;
+                        } 
+                    }       
+
+                    if (strcmp("equals", commands[command_count - 1].command_string) == 0) {
+                        if (command_arg_check(&commands[command_count - 1], 2) == 0)
+                            return EXIT_FAILURE;
+                        else {
+                            if ( (set_index_check(commands[command_count - 1], sets_array, set_count, 0) != -1) 
+                              && (set_index_check(commands[command_count - 1], sets_array, set_count, 1) != -1) )
+                                set_equals(&sets_array[set_index_check(commands[command_count - 1], sets_array, set_count, 0)],
+                                          &sets_array[set_index_check(commands[command_count - 1], sets_array, set_count, 1)]);
+                            else return EXIT_FAILURE;
+                        } 
+                    }              
+
+
 
 
 
