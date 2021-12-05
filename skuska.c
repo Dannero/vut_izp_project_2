@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdint.h>
+#include <math.h>
 
 #define argument_count 2
 #define max_member_len 30
@@ -64,7 +65,7 @@ typedef struct {
     uint8_t* bytes;
     int bit_len;
     int byte_len;
-} Bitfield_t;
+} Bitfield_t; 
 
 
     //////SET FUNCTIONS//////
@@ -275,6 +276,12 @@ uint8_t getflag(int pos, uint8_t* flags);
 void setflag(int pos, bool b, uint8_t* flags);
 uint8_t getflag2d(int y, int x, uint8_t* field_p, int bit_width);
 void setflag2d(bool b, int y, int x, uint8_t* field_p, int bit_width);
+
+// How many bytes do you need to store n bits?
+int min_bytes(int n) {
+    int extra = (n % 8 == 0 ? 0 : 1);
+    return ((int)(n / 8.0)) + extra;
+}
 
 
 
@@ -499,7 +506,6 @@ void load_universe(char *str_line, bool *uni_load_fail, Universe_t *uni_array) {
             
             for (int o = 0; o < illegal_str_count; o++) {        //Parsing through illegal strings
                 if (strcmp(buffer, illegal_strings[o]) == 0) {
-            
                     fprintf(stderr, "Error: Illegal strings used\n");
                     *uni_load_fail = true;
                     break;
@@ -523,7 +529,7 @@ void print_universe (Universe_t *uni_array) {
 
 
 //SET LOAD//
-void load_set (char *str_line, bool *set_load_fail, Set_t *set_array, Universe_t *uni_array) {
+int load_set (char *str_line, bool *set_load_fail, Set_t *set_array, Universe_t *uni_array) {
     char c;
     bool uni_cmp_success;
     char *buffer = malloc(sizeof(char));
@@ -535,6 +541,7 @@ void load_set (char *str_line, bool *set_load_fail, Set_t *set_array, Universe_t
     if (set_array->member == NULL) {
         fprintf(stderr, "Error occured during set array memory allocation\n");
         *set_load_fail = true;
+        return 0;
     }
 
     for (unsigned int i = 2; i <= strlen(str_line); i++) {
@@ -554,10 +561,12 @@ void load_set (char *str_line, bool *set_load_fail, Set_t *set_array, Universe_t
             if (set_array->member == NULL) {
                 fprintf(stderr, "Error occured during set array memory allocation\n");
                 *set_load_fail = true;
+                return 0;
             }
             if (set_array->member[set_array->set_size - 1].set_mem == NULL) {
                 fprintf(stderr, "Error occured during set member memory allocation\n");
                 *set_load_fail = true;
+                return 0;
             }
 
 
@@ -568,6 +577,7 @@ void load_set (char *str_line, bool *set_load_fail, Set_t *set_array, Universe_t
                 if (strcmp(set_array->member[set_array->set_size - 1].set_mem, set_array->member[o].set_mem) == 0) {
                     fprintf(stderr, "Error: Multiple equal set members\n");
                     *set_load_fail = true;
+                    return 0;
                     break;
                 }
             }
@@ -582,6 +592,7 @@ void load_set (char *str_line, bool *set_load_fail, Set_t *set_array, Universe_t
             if (uni_cmp_success == false) {
                 fprintf(stderr, "Error: Set member not declared in universe\n");
                 *set_load_fail = true;
+                return 0;
                 break;
             }
             buffer = realloc(buffer, sizeof(char));
@@ -589,6 +600,7 @@ void load_set (char *str_line, bool *set_load_fail, Set_t *set_array, Universe_t
         }
     }
     free(buffer);
+    return 1;
 }
 
 //SET PRINT//
@@ -602,7 +614,7 @@ void print_set(Set_t *set_array) {
 
 
 //RELATION LOADING//
-void load_relation(char *str_line, bool *rel_load_fail, Rel_t *rel_array, Universe_t *uni_array) {
+int load_relation(char *str_line, Rel_t *rel_array, Universe_t *uni_array) {
     char c;
     bool bracket = false;       //Strings can only be loaded if they are inside of brackets in input
     bool uni_cmp_success = false;
@@ -610,12 +622,10 @@ void load_relation(char *str_line, bool *rel_load_fail, Rel_t *rel_array, Univer
     buffer[0] = '\0';
     rel_array->rel_size = 0;
     rel_array->member = malloc(sizeof(Rel_member_t));
-    buffer_alloc_check(rel_load_fail, buffer);
+    //buffer_alloc_check(rel_load_fail, buffer);
 
-    if (rel_array->member == NULL) {
-        fprintf(stderr, "Error occured during relation array memory allocation\n");
-        *rel_load_fail = true;
-    }
+    if (rel_array->member == NULL)
+        return 0;
 
     //loading and parsing relations from line 
     for (unsigned int i = 2; i <= strlen(str_line); i++) {
@@ -624,95 +634,85 @@ void load_relation(char *str_line, bool *rel_load_fail, Rel_t *rel_array, Univer
             bracket = true;
 
         if (c != ' ' && c != '(' && c != ')' && bracket == true) {
+
             buffer = (char*) realloc(buffer, strlen(buffer) + sizeof(char)*2);
-            buffer_alloc_check(rel_load_fail, buffer);
+            //buffer_alloc_check(rel_load_fail, buffer);
             strncat(buffer, &c, 1);
         }
 
+
         if (c == ' ' && bracket == true) {
+
             rel_array->rel_size++;
             rel_array->member = realloc(rel_array->member, rel_array->rel_size * sizeof(Rel_member_t));
             rel_array->member[rel_array->rel_size - 1].rel_x = malloc(strlen(buffer) * sizeof(char));
 
-            if (rel_array->member == NULL) {
-                fprintf(stderr, "Error occured during relation array memory allocation\n");
-                *rel_load_fail = true;
-                break;
-            }    
-            if (rel_array->member[rel_array->rel_size - 1].rel_x == NULL) {
-                fprintf(stderr, "Error occured during relation member memory allocation\n");
-                *rel_load_fail = true;
-                break;
-            }
+            if (rel_array->member == NULL)
+                return 0;
+
+            if (rel_array->member[rel_array->rel_size - 1].rel_x == NULL)
+                return 0;
+
             for (int o = 0; o < uni_array->member_count; o++) {  //Checking if set member is declared in Universe
                 if (strcmp(buffer, uni_array->uni_member[o]) == 0) {
                     rel_array->member[rel_array->rel_size - 1].rel_x_index = o;
                     uni_cmp_success = true;
-                    break;
                 }            
             }
-            if (uni_cmp_success == false) {
-                fprintf(stderr, "Error: Relation member x not declared in universe\n");
-                *rel_load_fail = true;
-                break;
-            }
+
+            if (uni_cmp_success == false)
+                return 0;
+
 
             strcpy(rel_array->member[rel_array->rel_size - 1].rel_x, buffer);
             //uni_cmp_success = false;
+
             buffer = realloc(buffer, sizeof(char));
-            buffer_alloc_check(rel_load_fail, buffer);
+            //buffer_alloc_check(rel_load_fail, buffer);
             buffer[0] = '\0';            
         }
 
         if (c == ')' && bracket == true) {
             rel_array->member[rel_array->rel_size - 1].rel_y = malloc(strlen(buffer) * sizeof(char));
 
-            if (rel_array->member == NULL) {
-                fprintf(stderr, "Error occured during relation array memory allocation\n");
-                *rel_load_fail = true;
-                break;
-            }    
-            if (rel_array->member[rel_array->rel_size - 1].rel_y == NULL) {
-                fprintf(stderr, "Error occured during relation member memory allocation\n");
-                *rel_load_fail = true;
-                break;
-            }
+            if (rel_array->member == NULL)
+                return 0;
+
+
+            if (rel_array->member[rel_array->rel_size - 1].rel_y == NULL)
+                return 0;
+
             for (int o = 0; o < uni_array->member_count; o++) {  //Checking if set member is declared in Universe
                 if (strcmp(buffer, uni_array->uni_member[o]) == 0) {
                     rel_array->member[rel_array->rel_size - 1].rel_y_index = o;
                     uni_cmp_success = true;
-                    break;
                 }            
             }
-            if (uni_cmp_success == false) {
-                fprintf(stderr, "Error: Relation member y not declared in universe\n");
-                *rel_load_fail = true;
-                break;
-            }  
+
+            if (uni_cmp_success == false)
+                return 0;
+
             strcpy(rel_array->member[rel_array->rel_size - 1].rel_y, buffer);
             bracket = false;
             buffer = realloc(buffer, sizeof(char));
-            buffer_alloc_check(rel_load_fail, buffer);
+            //buffer_alloc_check(rel_load_fail, buffer);
             buffer[0] = '\0';
         }
 
-        if (c != ' ' && c != ')' && c != '\0' && bracket == false) {
-            fprintf(stderr, "Error: incorrect relation input syntax\n");
-            *rel_load_fail = true;
-            break;
-        }
+        if (c != ' ' && c != ')' && c != '\0' && bracket == false)
+            return 0;
 
     }
 
 
     for (int i = 0; i < rel_array->rel_size - 1; i++) {
         if (strcmp(rel_array->member[rel_array->rel_size - 1].rel_x, rel_array->member[i].rel_x) == 0 
-        &&  strcmp(rel_array->member[rel_array->rel_size - 1].rel_y, rel_array->member[i].rel_y) == 0) {
-            fprintf(stderr, "Error: multiple equal relations\n");
-            *rel_load_fail = true;
-        }
+        &&  strcmp(rel_array->member[rel_array->rel_size - 1].rel_y, rel_array->member[i].rel_y) == 0)
+            return 0;
+
     }
     free(buffer);
+    return 1;
 }
 
 //RELATION PRINT//
@@ -726,7 +726,7 @@ void print_relation (Rel_t *rel_array) {
 
 
 ////LOADING COMMAND LINE/////
-void load_command(char *str_line, bool *command_load_fail, Command_t *command) {
+int load_command(char *str_line, bool *command_load_fail, Command_t *command) {
     char  c;
     bool command_loaded = false;
     char *ptr;
@@ -751,6 +751,7 @@ void load_command(char *str_line, bool *command_load_fail, Command_t *command) {
                 if(command->command_arg[command->size - 1] == 0) {
                     fprintf(stderr, "Error: wrong syntax in command line\n");
                     *command_load_fail = true;
+                    return 0;
                 }
             }
 
@@ -765,6 +766,7 @@ void load_command(char *str_line, bool *command_load_fail, Command_t *command) {
         }
     }
     free(buffer);
+    return 1;
 }
 
     
@@ -831,7 +833,6 @@ int main(int argc, char* argv[])   {
 
     bool uni_load_fail = false;
     bool set_load_fail = false;
-    bool rel_load_fail = false;
     bool command_load_fail = false;
     bool was_command = false;
 
@@ -891,8 +892,10 @@ int main(int argc, char* argv[])   {
                     }
                     
                     sets_array[set_count - 1].set_index = line_count;  //Sets the current line index as the set index
-                    load_set(str_line, &set_load_fail, &sets_array[set_count - 1], &uni_array);   //Loading set into set structures
-
+                    if (load_set(str_line, &set_load_fail, &sets_array[set_count - 1], &uni_array) == 0) {   //Loading set into set structures
+                        fprintf(stderr, "Error while loading set\n");
+                        return EXIT_FAILURE;
+                    }
                     if (set_load_fail == true)
                         return EXIT_FAILURE;
                     else 
@@ -915,13 +918,15 @@ int main(int argc, char* argv[])   {
                         return EXIT_FAILURE;
                     rel_count++;
                     rels_array = realloc(rels_array, rel_count * sizeof(Rel_t));
-                    rels_array[rel_count - 1].rel_index = line_count;
-                    load_relation(str_line, &rel_load_fail, &rels_array[rel_count - 1], &uni_array);
 
-                    if (rel_load_fail == true) { 
+                    rels_array[rel_count - 1].rel_index = line_count;
+
+                    if (load_relation(str_line, &rels_array[rel_count - 1], &uni_array) == 0) {
+                        fprintf(stderr, "Error while loading relation\n");
                         return EXIT_FAILURE;
                     }
-                    else 
+
+                    if (load_relation(str_line, &rels_array[rel_count - 1], &uni_array) == 1)
                         print_relation(&rels_array[rel_count - 1]);
                 }
 
@@ -936,13 +941,16 @@ int main(int argc, char* argv[])   {
                     fprintf(stderr, "Error: No sets or relations");
                     return EXIT_FAILURE;
                 }
-                if (line_count !=1) {
+                if (line_count != 1) {
                     was_command = true;
                     if (! (second_char_check(str_line))) 
                         return EXIT_FAILURE;
                     command_count++;
                     commands = realloc(commands, command_count * sizeof(Command_t));
-                    load_command(str_line, &command_load_fail, &commands[command_count - 1]);
+                    if (load_command(str_line, &command_load_fail, &commands[command_count - 1]) == 0) {
+                        fprintf(stderr, "Error while loading command\n");
+                        return EXIT_FAILURE;
+                    }
 
                     
                     //SET FUNCTIONS WITH 1 ARGUMENT//
@@ -1052,44 +1060,44 @@ int main(int argc, char* argv[])   {
                     //////RELATIONS FUNCTIONS WITH 1 ARGUMENT////
 
                     if (strcmp("reflexive", commands[command_count - 1].command_string) == 0) {
-                        if (command_arg_check(&commands[command_count - 1], 1) == 0)
+                        if (command_arg_check(&commands[command_count - 1], 1) == 0) 
                             return EXIT_FAILURE;
                         else {
-                            if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1)
+                            if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1) 
                                 is_reflexive(&rels_array[commands[command_count - 1].command_arg[0]], &uni_array);
                             else return EXIT_FAILURE;
                         }
                     }
 
                     if (strcmp("symmetric", commands[command_count - 1].command_string) == 0) {
-                        if (command_arg_check(&commands[command_count - 1], 1) == 0)
+                        if (command_arg_check(&commands[command_count - 1], 1) == 0) 
                             return EXIT_FAILURE;
                         else {
-                            if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1)
+                            if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1) 
                                 is_symmetric(&rels_array[commands[command_count - 1].command_arg[0]], &uni_array);
                             else return EXIT_FAILURE;
                         }
-                    }
+                    }  
 
                     if (strcmp("antisymmetric", commands[command_count - 1].command_string) == 0) {
-                        if (command_arg_check(&commands[command_count - 1], 1) == 0)
+                        if (command_arg_check(&commands[command_count - 1], 1) == 0) 
                             return EXIT_FAILURE;
                         else {
-                            if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1)
+                            if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1) 
                                 is_antisymmetric(&rels_array[commands[command_count - 1].command_arg[0]], &uni_array);
                             else return EXIT_FAILURE;
                         }
-                    }
+                    }  
 
                     if (strcmp("transitive", commands[command_count - 1].command_string) == 0) {
-                        if (command_arg_check(&commands[command_count - 1], 1) == 0)
+                        if (command_arg_check(&commands[command_count - 1], 1) == 0) 
                             return EXIT_FAILURE;
                         else {
-                            if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1)
+                            if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1) 
                                 is_transitive(&rels_array[commands[command_count - 1].command_arg[0]], &uni_array);
                             else return EXIT_FAILURE;
                         }
-                    }
+                    }                    
 
 
                     if (strcmp("domain", commands[command_count - 1].command_string) == 0) {
@@ -1143,7 +1151,7 @@ int main(int argc, char* argv[])   {
                         if (command_arg_check(&commands[command_count -1], 1) == 0)
                             return EXIT_FAILURE;
                         else rel_biject(&rels_array[commands[command_count -1].command_arg[0]], uni_array);
-                    }
+                    }              
                 }
 
                 else {
@@ -1200,28 +1208,28 @@ void is_reflexive(Rel_t* rel_p, Universe_t* uni_p) {
 	for (int i = 0; i < uni_p->member_count; i++) {
 		refl_arr[i] = false;
 	}
-
+	
 	// Loop through each relation member
 	for (int i = 0; i < rel_p->rel_size; i++) {
-
+		
 		Rel_member_t* member_p = &(rel_p->member[i]);
 
 		// If this universe member already is related to itself
 		if (refl_arr[member_p->rel_x_index] == true) {
 			continue;
 		}
-
+		
 		// If it isn't related to itself, maybe it will be related now
 		if (member_p->rel_x_index == member_p->rel_y_index) {
-
+			
 			refl_arr[member_p->rel_x_index] = (member_p->rel_x_index == member_p->rel_y_index);
 		}
 	}
-
-	// If refl_arr is filled with only trues, it means that every universe member
+	
+	// If refl_arr is filled with only trues, it means that every universe member 
 	// is related to itself
 	for (int i = 0; i < uni_p->member_count; i++) {
-		if (refl_arr[i] == false) {
+		if (refl_arr[i] == false) { 
 		    fprintf(stdout, "false\n");
 		    return;
 		}
@@ -1230,20 +1238,20 @@ void is_reflexive(Rel_t* rel_p, Universe_t* uni_p) {
 }
 
 void is_symmetric(Rel_t* rel_p, Universe_t* uni_p) {
-
+    
     Bitfield_t rel2d;
     rel_to_bitfield(rel_p, uni_p, &rel2d);
-
+    
     // Check only the diagonal
     for (int x = 0; x < uni_p->member_count; x++) {
         for (int y = 0; y < uni_p->member_count; y++) {
-
+            
             bool a = getflag2d(y, x, rel2d.bytes, uni_p->member_count);
             bool b = getflag2d(x, y, rel2d.bytes, uni_p->member_count);
-
-            // for every a: aRa
+            
+            // for every a: aRa 
             if (a != b) {
-
+                    
                     fprintf(stdout, "false");
                     free(rel2d.bytes);
                     return;
@@ -1255,61 +1263,62 @@ void is_symmetric(Rel_t* rel_p, Universe_t* uni_p) {
 }
 
 void is_antisymmetric(Rel_t* rel_p, Universe_t* uni_p) {
-
+    
     Bitfield_t rel2d;
     rel_to_bitfield(rel_p, uni_p, &rel2d);
-
-
+    
+    
     // Check for symmetries "along a triangle"
     for (int y = 0; y < uni_p->member_count; y++) {
         for (int x = 0; x < y; x++) {
             bool a = getflag2d(y, x, rel2d.bytes, uni_p->member_count);
             bool b = getflag2d(x, y, rel2d.bytes, uni_p->member_count);
-
+            
             // for every a, b: if aRb and bRa then a must equal b
             if ((a == true) && (b == true)) {
                 free(rel2d.bytes);
                 printf("false");
                 return;
-            }
+            } 
         }
-
+        
     }
     free(rel2d.bytes);
     printf("true");
 }
 
 void is_transitive(Rel_t* rel_p, Universe_t* uni_p) {
-
+    
     Bitfield_t rel2d;
     rel_to_bitfield(rel_p, uni_p, &rel2d);
-
+    
     // For each row in the relation table
     for (int y = 0; y < uni_p->member_count; y++) {
-
+        
         // Look for a "1" in this row. If it's there, look at the row
-        // representing the 2nd component of the relation
+        // representing the 2nd component of the relation 
         // represented by this "1".
         for (int x = 0; x < uni_p->member_count; x++) {
-
+            
             if (getflag2d(y, x, rel2d.bytes, rel_p->rel_size) != 0) {
-
+                
                 printf("found relation at %d, %d:\n", y, x);
                 int b_row_y = x;
-
+                
                 for (int b_x = 0; b_x < uni_p->member_count; b_x++) {
-
+                    
                     bool is_related = getflag2d(b_row_y, b_x, rel2d.bytes, rel_p->rel_size);
                     printf("%d,%d: %d | ", b_row_y, b_x, is_related);
                 }
                 printf("\n\n");
             }
-
+            
         }
-
+        
     }
-
+    
 }
+
 
 // BITFIELD STUFF--------------------------------------------------
 
@@ -1320,16 +1329,16 @@ int min_bytes(int n) {
 }
 
 void rel_to_bitfield(Rel_t* rel_p, Universe_t* uni_p, Bitfield_t* field_p) {
-
+    
     field_p->bit_len = uni_p->member_count * uni_p->member_count;
-    field_p->byte_len = min_bytes(field_p->bit_len);
+    field_p->byte_len = (int) ceil(field_p->bit_len / 8.0);
     field_p-> bytes = malloc(field_p->byte_len);
-
+    
     for (int i = 0; i < field_p->byte_len; i++) { // Make every bit 0
         field_p->bytes[i] = 0;
     }
-
-    // set the individual bits
+    
+    // set the individual bits 
     for (int i = 0; i < rel_p->rel_size; i++) {
         int x = rel_p->member[i].rel_x_index;
         int y = rel_p->member[i].rel_y_index;
@@ -1339,24 +1348,24 @@ void rel_to_bitfield(Rel_t* rel_p, Universe_t* uni_p, Bitfield_t* field_p) {
 
 uint8_t getflag(int pos, uint8_t* flags) {
 	 int bindex = (int)(pos / 8.0); // Which byte from the left?
-
+	
 	// In that byte, which bit from the left
-	int inbindex = pos % 8;
-
+	int inbindex = pos % 8; 
+	
 	uint8_t onel = 128; // 128 in binary is "10000000"
-
+	
 	// Pushes that single "1" left by 'inbindex' places
 	int res = flags[bindex] & (onel >> inbindex);
-	return res;
+	return res; 
 }
 
 void setflag(int pos, bool b, uint8_t* flags) {
 	int bindex = (int)(pos / 8.0);
-
-	int inbindex = pos % 8;
-
+	
+	int inbindex = pos % 8; 
+	
 	uint8_t onel = 128; // Binary: 10000000
-
+	
 	flags[bindex] &= ~(onel >> inbindex); // Reset that bit to zero
 	if (b == true) {
 		flags[bindex] |= (onel >> inbindex); // Turn that bit on
@@ -1365,7 +1374,7 @@ void setflag(int pos, bool b, uint8_t* flags) {
 
 uint8_t getflag2d(int y, int x, uint8_t* field_p, int bit_width) {
     int pos = y * bit_width + x;
-
+    
     return getflag(pos, field_p);
 }
 
