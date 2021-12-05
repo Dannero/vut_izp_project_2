@@ -377,8 +377,6 @@ char *load_line(FILE **fp) {
             return NULL;
         strncat(line_str, &c, 1);
     }
-    if (line_str == NULL) 
-        return NULL;
     return line_str;
 
 }
@@ -1139,6 +1137,7 @@ int main(int argc, char* argv[])   {
         }
         free(str_line);
     }
+
 
     ///CLEARING MEMORY///
     for(int i = 0; i < command_count; i++){
