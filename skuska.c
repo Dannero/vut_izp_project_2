@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdint.h>
-#include <math.h>
 
 #define argument_count 2
 #define max_member_len 30
@@ -65,11 +64,11 @@ typedef struct {
     uint8_t* bytes;
     int bit_len;
     int byte_len;
-} Bitfield_t; 
+} Bitfield_t;
 
 
     //////SET FUNCTIONS//////
-//print true if set is empty
+//function prints true if set is empty
 void set_empty(Set_t * set){
     if(!set->set_size){
         printf("true\n");
@@ -79,14 +78,15 @@ void set_empty(Set_t * set){
     }
 }
 
-//print set cardinality
+//function prints set cardinality
 void set_card(Set_t * set){
     printf("%d\n", set->set_size);
 }
 
-//print complement of set to the universe
+//function prints complement of setA to the universe
 void set_complement(Set_t * setA, Universe_t * uni){
     printf("S");
+    //if setA is empty, prints all members of universe
     if(setA->set_size == 0){
         for(int i = 0; i < uni->member_count; i++) {
             printf(" %s", uni->uni_member[i]);
@@ -95,9 +95,11 @@ void set_complement(Set_t * setA, Universe_t * uni){
     for(int i = 0; i < uni->member_count; i++) {
         int cmp = 0;
         for (int j = 0; j < setA->set_size; j++) {
+            //compare all members of setA with all members of universe
             if(strcmp(uni->uni_member[i], setA->member[j].set_mem) == 0){
                 cmp = 1;
             }
+            //print all members of universe missing from setA
             if(cmp != 1 && j == (setA->set_size - 1)) {
                 printf(" %s", uni->uni_member[i]);
                 break;
@@ -107,23 +109,28 @@ void set_complement(Set_t * setA, Universe_t * uni){
     printf("\n");
 }
 
-
+//function prints union of 2 sets
 void set_union(Set_t * setA, Set_t * setB){
     printf("S");
+    //if first set is empty, prints all members of second set
     if(setA->set_size == 0){
         for(int i = 0; i < setB->set_size; i++) {
             printf(" %s", setB->member[i].set_mem);
         }
+        return;
     }
+    //prints all members of first set
     for(int i = 0; i < setA->set_size; i++){
         printf(" %s", setA->member[i].set_mem);
     }
     for(int i = 0; i < setB->set_size; i++) {
         int cmp = 0;
         for (int j = 0; j < setA->set_size; j++) {
+            //checks for unique members of setB
             if(strcmp(setB->member[i].set_mem, setA->member[j].set_mem) == 0){
                 cmp = 1;
             }
+            //prints unique members of setB
             if(cmp != 1 && j == (setA->set_size - 1)) {
                 printf(" %s", setB->member[i].set_mem);
                 break;
@@ -133,14 +140,17 @@ void set_union(Set_t * setA, Set_t * setB){
     printf("\n");
 }
 
+//function prints intersect of 2 sets
 void set_intersect(Set_t * setA, Set_t * setB){
     printf("S");
     for(int i = 0; i < setB->set_size; i++) {
         int cmp = 0;
         for (int j = 0; j < setA->set_size; j++) {
+            //checks for common members
             if(strcmp(setB->member[i].set_mem, setA->member[j].set_mem) == 0){
                 cmp = 1;
             }
+            //prints all common members of both sets
             if(cmp == 1 && j == (setA->set_size - 1)) {
                 printf(" %s", setB->member[i].set_mem);
                 break;
@@ -150,6 +160,7 @@ void set_intersect(Set_t * setA, Set_t * setB){
     printf("\n");
 }
 
+//function substracts setB from setA and prints result
 void set_minus(Set_t * setA, Set_t * setB){
     printf("S");
     for(int i = 0; i < setA->set_size; i++) {
@@ -158,6 +169,7 @@ void set_minus(Set_t * setA, Set_t * setB){
             if(strcmp(setA->member[i].set_mem, setB->member[j].set_mem) == 0){
                 cmp = 1;
             }
+            //prints all unique members of setA
             if(cmp != 1 && j == (setB->set_size - 1)) {
                 printf(" %s", setA->member[i].set_mem);
                 break;
@@ -167,7 +179,9 @@ void set_minus(Set_t * setA, Set_t * setB){
     printf("\n");
 }
 
+//function prints true or false, whether setA is subset or equal to setB
 void set_subseteq(Set_t * setA, Set_t * setB){
+    //if setA is bigger than setB, it can't be a subset of setB
     if(setA->set_size > setB->set_size) {
         printf("false\n");
         return;
@@ -179,6 +193,7 @@ void set_subseteq(Set_t * setA, Set_t * setB){
     int cmp = 0;
     for(int i = 0; i < setA->set_size; i++) {
         for (int j = 0; j < setB->set_size; j++) {
+            //checks whether all members of setA are also members of setB
             if(strcmp(setA->member[i].set_mem, setB->member[j].set_mem) == 0){
                 cmp++;
             }
@@ -191,7 +206,9 @@ void set_subseteq(Set_t * setA, Set_t * setB){
     printf("false\n");
 }
 
+//function prints true or false, whether setA is proper subset of setB
 void set_subset(Set_t * setA, Set_t * setB){
+    //if setA is bigger or as big as setB, it can't be proper subset of setB
     if(setA->set_size >= setB->set_size) {
         printf("false\n");
         return;
@@ -203,6 +220,7 @@ void set_subset(Set_t * setA, Set_t * setB){
     int cmp = 0;
     for(int i = 0; i < setA->set_size; i++) {
         for (int j = 0; j < setB->set_size; j++) {
+            //checks whether all members of setA are also members of setB
             if(strcmp(setA->member[i].set_mem, setB->member[j].set_mem) == 0){
                 cmp++;
             }
@@ -215,11 +233,14 @@ void set_subset(Set_t * setA, Set_t * setB){
     printf("false\n");
 }
 
+//function compares 2 sets and prints true or false, whether they are equal or not
 void set_equals(Set_t * setA, Set_t * setB){
+    //if size of sets differs, they can't be equal
     if(setA->set_size != setB->set_size) {
         printf("false\n");
         return;
     }
+    //if both sets are empty, they are equal
     if(setB->set_size == 0 && setA->set_size == 0){
         printf("true\n");
         return;
@@ -227,6 +248,7 @@ void set_equals(Set_t * setA, Set_t * setB){
     int cmp = 0;
     for(int i = 0; i < setA->set_size; i++) {
         for (int j = 0; j < setB->set_size; j++) {
+            //compares all members of both sets
             if(strcmp(setA->member[i].set_mem, setB->member[j].set_mem) == 0){
                 cmp++;
             }
@@ -382,8 +404,6 @@ char *load_line(FILE **fp) {
 }
 
 
-
-
 int second_char_check(char *str_line) {        //Checking if the second char in line is SPACE                    
     if ((str_line[1] != ' ' && str_line[1] != '\0')) {
         fprintf(stderr, "Error: Incorrect input syntax\n");
@@ -408,7 +428,7 @@ void buffer_alloc_check (bool *alloc_fail, char *buffer) {  //Checking buffer al
 }
 
 int command_arg_check (Command_t * command, int count) {    //Checking the correct number of arguments in command call
-    if (command->size != count) {
+    if (command->size > count) {
         fprintf(stderr, "Error: incorrect number of arguments in command call\n");
         return 0;
     }
@@ -825,7 +845,6 @@ int main(int argc, char* argv[])   {
     while (! (feof(fp))) {
         char *str_line = load_line(&fp);
         line_count++;
-
         if (line_count > max_line_count) {      //Checking the number of lines in file
             fprintf(stderr, "Error: Max number of lines surpassed\n");
             return EXIT_FAILURE;
@@ -913,7 +932,11 @@ int main(int argc, char* argv[])   {
                 break;
 
             case 'C':               //Command Function
-                if (line_count != 1) {
+                if (rel_count == 0 && set_count == 1){
+                    fprintf(stderr, "Error: No sets or relations");
+                    return EXIT_FAILURE;
+                }
+                if (line_count !=1) {
                     was_command = true;
                     if (! (second_char_check(str_line))) 
                         return EXIT_FAILURE;
@@ -1029,44 +1052,44 @@ int main(int argc, char* argv[])   {
                     //////RELATIONS FUNCTIONS WITH 1 ARGUMENT////
 
                     if (strcmp("reflexive", commands[command_count - 1].command_string) == 0) {
-                        if (command_arg_check(&commands[command_count - 1], 1) == 0) 
+                        if (command_arg_check(&commands[command_count - 1], 1) == 0)
                             return EXIT_FAILURE;
                         else {
-                            if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1) 
+                            if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1)
                                 is_reflexive(&rels_array[commands[command_count - 1].command_arg[0]], &uni_array);
                             else return EXIT_FAILURE;
                         }
                     }
 
                     if (strcmp("symmetric", commands[command_count - 1].command_string) == 0) {
-                        if (command_arg_check(&commands[command_count - 1], 1) == 0) 
+                        if (command_arg_check(&commands[command_count - 1], 1) == 0)
                             return EXIT_FAILURE;
                         else {
-                            if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1) 
+                            if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1)
                                 is_symmetric(&rels_array[commands[command_count - 1].command_arg[0]], &uni_array);
                             else return EXIT_FAILURE;
                         }
-                    }  
+                    }
 
                     if (strcmp("antisymmetric", commands[command_count - 1].command_string) == 0) {
-                        if (command_arg_check(&commands[command_count - 1], 1) == 0) 
+                        if (command_arg_check(&commands[command_count - 1], 1) == 0)
                             return EXIT_FAILURE;
                         else {
-                            if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1) 
+                            if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1)
                                 is_antisymmetric(&rels_array[commands[command_count - 1].command_arg[0]], &uni_array);
                             else return EXIT_FAILURE;
                         }
-                    }  
+                    }
 
                     if (strcmp("transitive", commands[command_count - 1].command_string) == 0) {
-                        if (command_arg_check(&commands[command_count - 1], 1) == 0) 
+                        if (command_arg_check(&commands[command_count - 1], 1) == 0)
                             return EXIT_FAILURE;
                         else {
-                            if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1) 
+                            if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1)
                                 is_transitive(&rels_array[commands[command_count - 1].command_arg[0]], &uni_array);
                             else return EXIT_FAILURE;
                         }
-                    }                    
+                    }
 
 
                     if (strcmp("domain", commands[command_count - 1].command_string) == 0) {
@@ -1120,7 +1143,7 @@ int main(int argc, char* argv[])   {
                         if (command_arg_check(&commands[command_count -1], 1) == 0)
                             return EXIT_FAILURE;
                         else rel_biject(&rels_array[commands[command_count -1].command_arg[0]], uni_array);
-                    }              
+                    }
                 }
 
                 else {
@@ -1150,7 +1173,7 @@ int main(int argc, char* argv[])   {
         free(sets_array->member[i].set_mem);
     }
     for(int i = 0; i < set_count; i++){
-        free(sets_array->member);
+        free(sets_array[i].member);
     }
     for(int i = 0; i < rels_array->rel_size; i++){
         free(rels_array->member[i].rel_x);
@@ -1170,35 +1193,35 @@ int main(int argc, char* argv[])   {
 
 
 void is_reflexive(Rel_t* rel_p, Universe_t* uni_p) {
-	
+
 	// Array of bools, where each element answers the question:
 	// "Is the universe member with my index related to itself?"
 	bool refl_arr[uni_p->member_count];
 	for (int i = 0; i < uni_p->member_count; i++) {
 		refl_arr[i] = false;
 	}
-	
+
 	// Loop through each relation member
 	for (int i = 0; i < rel_p->rel_size; i++) {
-		
+
 		Rel_member_t* member_p = &(rel_p->member[i]);
 
 		// If this universe member already is related to itself
 		if (refl_arr[member_p->rel_x_index] == true) {
 			continue;
 		}
-		
+
 		// If it isn't related to itself, maybe it will be related now
 		if (member_p->rel_x_index == member_p->rel_y_index) {
-			
+
 			refl_arr[member_p->rel_x_index] = (member_p->rel_x_index == member_p->rel_y_index);
 		}
 	}
-	
-	// If refl_arr is filled with only trues, it means that every universe member 
+
+	// If refl_arr is filled with only trues, it means that every universe member
 	// is related to itself
 	for (int i = 0; i < uni_p->member_count; i++) {
-		if (refl_arr[i] == false) { 
+		if (refl_arr[i] == false) {
 		    fprintf(stdout, "false\n");
 		    return;
 		}
@@ -1207,20 +1230,20 @@ void is_reflexive(Rel_t* rel_p, Universe_t* uni_p) {
 }
 
 void is_symmetric(Rel_t* rel_p, Universe_t* uni_p) {
-    
+
     Bitfield_t rel2d;
     rel_to_bitfield(rel_p, uni_p, &rel2d);
-    
+
     // Check only the diagonal
     for (int x = 0; x < uni_p->member_count; x++) {
         for (int y = 0; y < uni_p->member_count; y++) {
-            
+
             bool a = getflag2d(y, x, rel2d.bytes, uni_p->member_count);
             bool b = getflag2d(x, y, rel2d.bytes, uni_p->member_count);
-            
-            // for every a: aRa 
+
+            // for every a: aRa
             if (a != b) {
-                    
+
                     fprintf(stdout, "false");
                     free(rel2d.bytes);
                     return;
@@ -1232,76 +1255,81 @@ void is_symmetric(Rel_t* rel_p, Universe_t* uni_p) {
 }
 
 void is_antisymmetric(Rel_t* rel_p, Universe_t* uni_p) {
-    
+
     Bitfield_t rel2d;
     rel_to_bitfield(rel_p, uni_p, &rel2d);
-    
-    
+
+
     // Check for symmetries "along a triangle"
     for (int y = 0; y < uni_p->member_count; y++) {
         for (int x = 0; x < y; x++) {
             bool a = getflag2d(y, x, rel2d.bytes, uni_p->member_count);
             bool b = getflag2d(x, y, rel2d.bytes, uni_p->member_count);
-            
+
             // for every a, b: if aRb and bRa then a must equal b
             if ((a == true) && (b == true)) {
                 free(rel2d.bytes);
                 printf("false");
                 return;
-            } 
+            }
         }
-        
+
     }
     free(rel2d.bytes);
     printf("true");
 }
 
 void is_transitive(Rel_t* rel_p, Universe_t* uni_p) {
-    
+
     Bitfield_t rel2d;
     rel_to_bitfield(rel_p, uni_p, &rel2d);
-    
+
     // For each row in the relation table
     for (int y = 0; y < uni_p->member_count; y++) {
-        
+
         // Look for a "1" in this row. If it's there, look at the row
-        // representing the 2nd component of the relation 
+        // representing the 2nd component of the relation
         // represented by this "1".
         for (int x = 0; x < uni_p->member_count; x++) {
-            
+
             if (getflag2d(y, x, rel2d.bytes, rel_p->rel_size) != 0) {
-                
+
                 printf("found relation at %d, %d:\n", y, x);
                 int b_row_y = x;
-                
+
                 for (int b_x = 0; b_x < uni_p->member_count; b_x++) {
-                    
+
                     bool is_related = getflag2d(b_row_y, b_x, rel2d.bytes, rel_p->rel_size);
                     printf("%d,%d: %d | ", b_row_y, b_x, is_related);
                 }
                 printf("\n\n");
             }
-            
-        }
-        
-    }
-    
-}
 
+        }
+
+    }
+
+}
 
 // BITFIELD STUFF--------------------------------------------------
 
+// How many bytes do you need to store n bits?
+int min_bytes(int n) {
+    int extra = (n % 8 == 0 ? 0 : 1);
+    return ((int)(n / 8.0)) + extra;
+}
+
 void rel_to_bitfield(Rel_t* rel_p, Universe_t* uni_p, Bitfield_t* field_p) {
-    
+
     field_p->bit_len = uni_p->member_count * uni_p->member_count;
-    field_p->byte_len = (int) ceil(field_p->bit_len / 8.0);
+    field_p->byte_len = min_bytes(field_p->bit_len);
     field_p-> bytes = malloc(field_p->byte_len);
-    
+
     for (int i = 0; i < field_p->byte_len; i++) { // Make every bit 0
         field_p->bytes[i] = 0;
     }
-    
-    // set the individual bits 
+
+    // set the individual bits
     for (int i = 0; i < rel_p->rel_size; i++) {
         int x = rel_p->member[i].rel_x_index;
         int y = rel_p->member[i].rel_y_index;
@@ -1311,24 +1339,24 @@ void rel_to_bitfield(Rel_t* rel_p, Universe_t* uni_p, Bitfield_t* field_p) {
 
 uint8_t getflag(int pos, uint8_t* flags) {
 	 int bindex = (int)(pos / 8.0); // Which byte from the left?
-	
+
 	// In that byte, which bit from the left
-	int inbindex = pos % 8; 
-	
+	int inbindex = pos % 8;
+
 	uint8_t onel = 128; // 128 in binary is "10000000"
-	
+
 	// Pushes that single "1" left by 'inbindex' places
 	int res = flags[bindex] & (onel >> inbindex);
-	return res; 
+	return res;
 }
 
 void setflag(int pos, bool b, uint8_t* flags) {
 	int bindex = (int)(pos / 8.0);
-	
-	int inbindex = pos % 8; 
-	
+
+	int inbindex = pos % 8;
+
 	uint8_t onel = 128; // Binary: 10000000
-	
+
 	flags[bindex] &= ~(onel >> inbindex); // Reset that bit to zero
 	if (b == true) {
 		flags[bindex] |= (onel >> inbindex); // Turn that bit on
@@ -1337,7 +1365,7 @@ void setflag(int pos, bool b, uint8_t* flags) {
 
 uint8_t getflag2d(int y, int x, uint8_t* field_p, int bit_width) {
     int pos = y * bit_width + x;
-    
+
     return getflag(pos, field_p);
 }
 
@@ -1345,4 +1373,5 @@ void setflag2d(bool b, int y, int x, uint8_t* field_p, int bit_width) {
     int pos = y * bit_width + x;
     setflag(pos, b, field_p);
 }
+
 
