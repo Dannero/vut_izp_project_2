@@ -278,7 +278,7 @@ void rel_codomain(Rel_t* relA)
 {
     for (int n = 0; n < relA->rel_size; n++)
     {
-        printf("%s",(relA->member+ n)->rel_y);
+        printf("%s ",(relA->member+ n)->rel_y);
     }
     printf("\n");
 }
