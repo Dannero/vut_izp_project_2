@@ -216,9 +216,112 @@ void set_equals(Set_t * setA, Set_t * setB){
 }
 
 
+//////RELATION FUNCTIONS//////
+
+//RELATION FUNCTION DOMAIN
+void rel_domain(Rel_t* relA)
+{
+    for (int n= 0; n < relA->rel_size; n++)
+    {
+        printf("%s",(relA->member + n)->rel_x);
+    }
+    printf("\n");
+}
+
+//RELATION FUNCTION CODOMAIN
+void rel_codomain(Rel_t* relA)
+{
+    for (int n = 0; n < relA->rel_size; n++)
+    {
+        printf("%s",(relA->member+ n)->rel_y);
+    }
+    printf("\n");
+}
+
+//RELATION FUNCTION INJECTIVE
+int rel_inject(Rel_t *r)
+{
+    int *pv;
+    int b = 1;
+    int items = uni_array.member_count;
+
+    pv = (int*)malloc(items * sizeof(int));
+    for (int n = 0; n < items; n++)
+    {
+        pv[n] = 0;
+    }
+
+    for (int n = 0; n < r->rel_size; n++)
+    {
+        ++pv[(r->member+n)->rel_y_index];
+        if (pv[(r->member+n)->rel_y_index] > 1)
+        {
+            b = 0;
+            printf("false\n");
+            break;
+        }
+    }
+
+    if(b != 0) printf("true\n");
+    free(pv);
+
+    return b;
+}
+
+//RELATION FUNCTION SURJECTIVE
+
+int rel_surject(Rel_t *r)
+{
+    int *pv;
+    int b = 1;
+    int items = uni_array.member_count;
+
+    pv = (int*)malloc(items * sizeof(int));
+    for (int n = 0; n < items; n++)
+    {
+        pv[n] = 0;
+    }
+
+    for (int n = 0; n < r->rel_size; n++)
+    {
+        ++pv[(r->member+n)->rel_y_index];
+
+    }
+    for (int n = 0; n < r->rel_size; n++)
+    {
+        if (pv[(r->member + n)->rel_y_index] == 0)
+        {
+            b = 0;
+            break;
+        }
+    }
+
+    if(b != 0) printf("true\n");
+    else printf("false\n");
+    free(pv);
+
+    return b;
+
+}
+
+//RELATION FUNCTION BIJECTIVE
+void rel_biject(Rel_t *r)
+{
+    if(rel_inject(r) && rel_surject(r))
+    {
+        printf("true\n");
+    }
+    else
+    {
+        printf("false\n");
+    }
+}
 
 
-        //LOADING LINE FROM FILE//
+
+
+
+//LOADING LINE FROM FILE//
 char *load_line(FILE **fp) {
     char *line_str = malloc(sizeof(char));
     if (line_str == NULL) 
@@ -228,8 +331,7 @@ char *load_line(FILE **fp) {
 
     while (1) {
         c = fgetc(*fp);
-
-        if (c == '\n'  || c == EOF) 
+        if (c == '\n' || c == EOF) 
             break;
 
         line_str = (char*) realloc(line_str, strlen(line_str) + sizeof(char)*2);  //2 --> One for new character, one for trailing zero 
@@ -237,6 +339,8 @@ char *load_line(FILE **fp) {
             return NULL;
         strncat(line_str, &c, 1);
     }
+    if (line_str == NULL) 
+        return NULL;
     return line_str;
     free(line_str);
 }
@@ -277,7 +381,7 @@ int command_arg_check (Command_t * command, int count) {    //Checking the corre
 
 
  
-        //LOADING UNIVERSE//
+//UNIVERSE LOAD//
 void load_universe(char *str_line, bool *uni_load_fail, Universe_t *uni_array) {
     char c;
     char *buffer = malloc(sizeof(char));
@@ -352,7 +456,7 @@ void load_universe(char *str_line, bool *uni_load_fail, Universe_t *uni_array) {
     free(buffer);   
 }
 
-
+//UNIVERSE PRINT//
 void print_universe (Universe_t *uni_array) {
     printf("U");
     for (int i = 0; i < uni_array->member_count; i++) {
@@ -362,6 +466,7 @@ void print_universe (Universe_t *uni_array) {
 }
 
 
+//SET LOAD//
 void load_set (char *str_line, bool *set_load_fail, Set_t *set_array, Universe_t *uni_array) {
     char c;
     bool uni_cmp_success;
@@ -382,10 +487,6 @@ void load_set (char *str_line, bool *set_load_fail, Set_t *set_array, Universe_t
         if (c != ' ') {
             buffer = (char*) realloc(buffer, strlen(buffer) + sizeof(char)*2);
             buffer_alloc_check(set_load_fail, buffer);
-            if (buffer == NULL) {
-                fprintf(stderr, "Error occured during buffer memory allocation\n");
-                *set_load_fail = true;        
-            }
             strncat(buffer, &c, 1);
         }
 
@@ -434,7 +535,7 @@ void load_set (char *str_line, bool *set_load_fail, Set_t *set_array, Universe_t
     free(buffer);
 }
 
-
+//SET PRINT//
 void print_set(Set_t *set_array) {
     printf("S");
     for (int i = 0; i < set_array->set_size; i++) {
@@ -444,6 +545,7 @@ void print_set(Set_t *set_array) {
 }
 
 
+//RELATION LOADING//
 void load_relation(char *str_line, bool *rel_load_fail, Rel_t *rel_array, Universe_t *uni_array) {
     char c;
     bool bracket = false;       //Strings can only be loaded if they are inside of brackets in input
@@ -557,14 +659,17 @@ void load_relation(char *str_line, bool *rel_load_fail, Rel_t *rel_array, Univer
     free(buffer);
 }
 
-void print_relation(Rel_t *rel_array) {
+//RELATION PRINT//
+void print_relation (Rel_t *rel_array) {
     printf("R");
     for (int i = 0; i < rel_array->rel_size; i++) {
         printf(" (%s %s)",rel_array->member[i].rel_x, rel_array->member[i].rel_y);
     }
     printf("\n");
 }
-    ////LOADING COMMAND LINE/////
+
+
+////LOADING COMMAND LINE/////
 void load_command(char *str_line, bool *command_load_fail, Command_t *command) {
     char  c;
     bool command_loaded = false;
@@ -605,12 +710,27 @@ void load_command(char *str_line, bool *command_load_fail, Command_t *command) {
     }
     free(buffer);
 }
-    
 
+    
+//SET AND RELATION INDEX CHECKING//
 long set_index_check(Command_t command, Set_t * sets_array, long set_count, int arg_num) {
     bool success = false;
     for (long i = 0; i < set_count; i++) {
         if (command.command_arg[arg_num] == sets_array[i].set_index) {
+            success = true;
+            return i;
+        }
+    }
+    if (success == false) 
+        fprintf(stderr, "Error: wrong command call argument\n");
+    return -1;
+}
+
+
+long rel_index_check(Command_t command, Rel_t * rels_array, long rel_count, int arg_num) {
+    bool success = false;
+    for (long i = 0; i < rel_count; i++) {
+        if (command.command_arg[arg_num] == rels_array[i].rel_index) {
             success = true;
             return i;
         }
@@ -664,13 +784,14 @@ int main(int argc, char* argv[])   {
             fprintf(stderr, "Error: Max number of lines surpassed\n");
             return EXIT_FAILURE;
         }
-
-        if (! (second_char_check(str_line))) 
-            return EXIT_FAILURE;
+        //printf("%s h\n", str_line);
 
         switch(str_line[0]) {
             case 'U':
                 if (line_count == 1) {
+                    if (! (second_char_check(str_line))) 
+                        return EXIT_FAILURE;
+
                     load_universe(str_line, &uni_load_fail, &uni_array); //Loading line into Universe arrays
 
                     if (uni_load_fail == true)                         
@@ -688,6 +809,8 @@ int main(int argc, char* argv[])   {
 
             case 'S':               //Set Function
                 if (line_count != 1) {
+                    if (! (second_char_check(str_line))) 
+                        return EXIT_FAILURE;
                     set_count++;
                     sets_array = realloc(sets_array, set_count * sizeof(Set_t));
                     if (sets_array == NULL) {
@@ -712,6 +835,8 @@ int main(int argc, char* argv[])   {
 
             case 'R':               //Relation Function
                 if (line_count != 1) {
+                    if (! (second_char_check(str_line))) 
+                        return EXIT_FAILURE;
                     rel_count++;
                     rels_array = realloc(rels_array, rel_count * sizeof(Rel_t));
                     rels_array[rel_count - 1].rel_index = line_count;
@@ -732,6 +857,8 @@ int main(int argc, char* argv[])   {
 
             case 'C':               //Command Function
                 if (line_count !=1) {
+                    if (! (second_char_check(str_line))) 
+                        return EXIT_FAILURE;
                     command_count++;
                     commands = realloc(commands, command_count * sizeof(Command_t));
                     load_command(str_line, &command_load_fail, &commands[command_count - 1]);
@@ -839,7 +966,62 @@ int main(int argc, char* argv[])   {
                                           &sets_array[set_index_check(commands[command_count - 1], sets_array, set_count, 1)]);
                             else return EXIT_FAILURE;
                         } 
-                    }              
+                    }    
+
+                    //////RELATIONS FUNCTIONS WITH 1 ARGUMENT////
+
+                    if (strcmp("domain", commands[command_count - 1].command_string) == 0) {
+                        if (command_arg_check(&commands[command_count - 1] ,1) == 0)
+                            return EXIT_FAILURE; 
+                        else {
+                            if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1) 
+                                rel_domain(&rels_array[commands[command_count - 1].command_arg[0]]);
+                            else return EXIT_FAILURE;
+                        }
+                    }
+
+                    if (strcmp("codomain", commands[command_count -1].command_string) == 0) {
+                        if (command_arg_check(&commands[command_count - 1], 1) == 0)
+                            return EXIT_FAILURE;
+                        else {
+                            if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1) 
+                                rel_codomain(&rels_array[commands[command_count - 1].command_arg[0]]);
+                            else return EXIT_FAILURE;
+                        }
+                    }
+
+                    if (strcmp("injective", commands[command_count -1].command_string) == 0) {
+                        if (command_arg_check(&commands[command_count -1], 1) == 0)
+                            return EXIT_FAILURE;
+                        else {
+                            if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1) {
+                                if (rel_inject(&rels_array[commands[command_count - 1].command_arg[0]]) != 0) 
+                                    printf("true\n");
+                                else printf("false\n");
+                            }    
+                            else return EXIT_FAILURE;
+                        }
+                    }
+
+                    if (strcmp("surjective", commands[command_count -1].command_string) == 0) {
+                        if (command_arg_check(&commands[command_count -1], 1) == 0)
+                            return EXIT_FAILURE;
+                        else {
+                            if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1) {
+                                if (rel_surject(&rels_array[commands[command_count - 1].command_arg[0]]) != 0) 
+                                    printf("true\n");
+                                else printf("false\n");
+                            }    
+                            else return EXIT_FAILURE;  
+                        }
+                    }
+
+                    if (strcmp("bijective", commands[command_count -1].command_string) == 0) {
+                        if (command_arg_check(&commands[command_count -1], 1) == 0)
+                            return EXIT_FAILURE;
+                        else rel_biject(&rels_array[commands[command_count -1].command_arg[0]]);
+
+                    }          
 
 
 
@@ -856,6 +1038,8 @@ int main(int argc, char* argv[])   {
                     return EXIT_FAILURE;
                 }
                 break;
+            
+            case '\0': return 0;
 
             default:                //Invalid function
                 fprintf(stderr, "Error: Invalid Function at line %d\n", line_count);
@@ -864,7 +1048,30 @@ int main(int argc, char* argv[])   {
         }
     }
 
-
-    fclose(fp);
+    //CLEARING MEMORY//
+    for(int i = 0; i < command_count; i++){
+            free(commands[i].command_string);
+        }
+        for(int i = 0; i < uni_array.member_count; i++){
+            free(uni_array.uni_member[i]);
+        }
+        for(int i = 0; i < sets_array->set_size; i++){
+            free(sets_array->member[i].set_mem);
+        }
+        for(int i = 0; i < set_count; i++){
+            free(sets_array->member);
+        }
+        for(int i = 0; i < rels_array->rel_size; i++){
+            free(rels_array->member[i].rel_x);
+            free(rels_array->member[i].rel_y);
+        }
+        for(int i = 0; i < rel_count; i++){
+            free(rels_array[i].member);
+        }
+        free(rels_array);
+        free(sets_array);
+        free(uni_array.uni_member);
+        free(commands);
+        fclose(fp);
     return 0;
 }
