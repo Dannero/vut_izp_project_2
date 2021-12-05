@@ -341,10 +341,10 @@ char *load_line(FILE **fp) {
 
 
 int second_char_check(char *str_line) {        //Checking if the second char in line is SPACE                    
-    if (str_line[1] != ' ') {                 
+    if ((str_line[1] != ' ' && str_line[1] != '\0')) {
         fprintf(stderr, "Error: Incorrect input syntax\n");
         return 0;
-    }    
+    }
     return 1;
 }
 
