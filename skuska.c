@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdint.h>
-//#include <math.h>
+#include <math.h>
 
 #define argument_count 2
 #define max_member_len 30
@@ -69,7 +69,7 @@ typedef struct {
 
 
     //////SET FUNCTIONS//////
-//print true if set is empty
+//function prints true if set is empty
 void set_empty(Set_t * set){
     if(!set->set_size){
         printf("true\n");
@@ -79,14 +79,15 @@ void set_empty(Set_t * set){
     }
 }
 
-//print set cardinality
+//function prints set cardinality
 void set_card(Set_t * set){
     printf("%d\n", set->set_size);
 }
 
-//print complement of set to the universe
+//function prints complement of setA to the universe
 void set_complement(Set_t * setA, Universe_t * uni){
     printf("S");
+    //if setA is empty, prints all members of universe
     if(setA->set_size == 0){
         for(int i = 0; i < uni->member_count; i++) {
             printf(" %s", uni->uni_member[i]);
@@ -95,9 +96,11 @@ void set_complement(Set_t * setA, Universe_t * uni){
     for(int i = 0; i < uni->member_count; i++) {
         int cmp = 0;
         for (int j = 0; j < setA->set_size; j++) {
+            //compare all members of setA with all members of universe
             if(strcmp(uni->uni_member[i], setA->member[j].set_mem) == 0){
                 cmp = 1;
             }
+            //print all members of universe missing from setA
             if(cmp != 1 && j == (setA->set_size - 1)) {
                 printf(" %s", uni->uni_member[i]);
                 break;
@@ -107,23 +110,28 @@ void set_complement(Set_t * setA, Universe_t * uni){
     printf("\n");
 }
 
-
+//function prints union of 2 sets
 void set_union(Set_t * setA, Set_t * setB){
     printf("S");
+    //if first set is empty, prints all members of second set
     if(setA->set_size == 0){
         for(int i = 0; i < setB->set_size; i++) {
             printf(" %s", setB->member[i].set_mem);
         }
+        return;
     }
+    //prints all members of first set
     for(int i = 0; i < setA->set_size; i++){
         printf(" %s", setA->member[i].set_mem);
     }
     for(int i = 0; i < setB->set_size; i++) {
         int cmp = 0;
         for (int j = 0; j < setA->set_size; j++) {
+            //checks for unique members of setB
             if(strcmp(setB->member[i].set_mem, setA->member[j].set_mem) == 0){
                 cmp = 1;
             }
+            //prints unique members of setB
             if(cmp != 1 && j == (setA->set_size - 1)) {
                 printf(" %s", setB->member[i].set_mem);
                 break;
@@ -133,14 +141,17 @@ void set_union(Set_t * setA, Set_t * setB){
     printf("\n");
 }
 
+//function prints intersect of 2 sets
 void set_intersect(Set_t * setA, Set_t * setB){
     printf("S");
     for(int i = 0; i < setB->set_size; i++) {
         int cmp = 0;
         for (int j = 0; j < setA->set_size; j++) {
+            //checks for common members
             if(strcmp(setB->member[i].set_mem, setA->member[j].set_mem) == 0){
                 cmp = 1;
             }
+            //prints all common members of both sets
             if(cmp == 1 && j == (setA->set_size - 1)) {
                 printf(" %s", setB->member[i].set_mem);
                 break;
@@ -150,6 +161,7 @@ void set_intersect(Set_t * setA, Set_t * setB){
     printf("\n");
 }
 
+//function substracts setB from setA and prints result
 void set_minus(Set_t * setA, Set_t * setB){
     printf("S");
     for(int i = 0; i < setA->set_size; i++) {
@@ -158,6 +170,7 @@ void set_minus(Set_t * setA, Set_t * setB){
             if(strcmp(setA->member[i].set_mem, setB->member[j].set_mem) == 0){
                 cmp = 1;
             }
+            //prints all unique members of setA
             if(cmp != 1 && j == (setB->set_size - 1)) {
                 printf(" %s", setA->member[i].set_mem);
                 break;
@@ -167,7 +180,9 @@ void set_minus(Set_t * setA, Set_t * setB){
     printf("\n");
 }
 
+//function prints true or false, whether setA is subset or equal to setB
 void set_subseteq(Set_t * setA, Set_t * setB){
+    //if setA is bigger than setB, it can't be a subset of setB
     if(setA->set_size > setB->set_size) {
         printf("false\n");
         return;
@@ -179,6 +194,7 @@ void set_subseteq(Set_t * setA, Set_t * setB){
     int cmp = 0;
     for(int i = 0; i < setA->set_size; i++) {
         for (int j = 0; j < setB->set_size; j++) {
+            //checks whether all members of setA are also members of setB
             if(strcmp(setA->member[i].set_mem, setB->member[j].set_mem) == 0){
                 cmp++;
             }
@@ -191,7 +207,9 @@ void set_subseteq(Set_t * setA, Set_t * setB){
     printf("false\n");
 }
 
+//function prints true or false, whether setA is proper subset of setB
 void set_subset(Set_t * setA, Set_t * setB){
+    //if setA is bigger or as big as setB, it can't be proper subset of setB
     if(setA->set_size >= setB->set_size) {
         printf("false\n");
         return;
@@ -203,6 +221,7 @@ void set_subset(Set_t * setA, Set_t * setB){
     int cmp = 0;
     for(int i = 0; i < setA->set_size; i++) {
         for (int j = 0; j < setB->set_size; j++) {
+            //checks whether all members of setA are also members of setB
             if(strcmp(setA->member[i].set_mem, setB->member[j].set_mem) == 0){
                 cmp++;
             }
@@ -215,11 +234,14 @@ void set_subset(Set_t * setA, Set_t * setB){
     printf("false\n");
 }
 
+//function compares 2 sets and prints true or false, whether they are equal or not
 void set_equals(Set_t * setA, Set_t * setB){
+    //if size of sets differs, they can't be equal
     if(setA->set_size != setB->set_size) {
         printf("false\n");
         return;
     }
+    //if both sets are empty, they are equal
     if(setB->set_size == 0 && setA->set_size == 0){
         printf("true\n");
         return;
@@ -227,6 +249,7 @@ void set_equals(Set_t * setA, Set_t * setB){
     int cmp = 0;
     for(int i = 0; i < setA->set_size; i++) {
         for (int j = 0; j < setB->set_size; j++) {
+            //compares all members of both sets
             if(strcmp(setA->member[i].set_mem, setB->member[j].set_mem) == 0){
                 cmp++;
             }
@@ -386,8 +409,6 @@ char *load_line(FILE **fp) {
     return line_str;
 
 }
-
-
 
 
 int second_char_check(char *str_line) {        //Checking if the second char in line is SPACE                    
@@ -603,7 +624,7 @@ int load_relation(char *str_line, Rel_t *rel_array, Universe_t *uni_array) {
     rel_array->member = malloc(sizeof(Rel_member_t));
     //buffer_alloc_check(rel_load_fail, buffer);
 
-    if (rel_array->member == NULL) 
+    if (rel_array->member == NULL)
         return 0;
 
     //loading and parsing relations from line 
@@ -611,7 +632,7 @@ int load_relation(char *str_line, Rel_t *rel_array, Universe_t *uni_array) {
         c = str_line[i];
         if (c == '(') 
             bracket = true;
- 
+
         if (c != ' ' && c != '(' && c != ')' && bracket == true) {
 
             buffer = (char*) realloc(buffer, strlen(buffer) + sizeof(char)*2);
@@ -626,10 +647,10 @@ int load_relation(char *str_line, Rel_t *rel_array, Universe_t *uni_array) {
             rel_array->member = realloc(rel_array->member, rel_array->rel_size * sizeof(Rel_member_t));
             rel_array->member[rel_array->rel_size - 1].rel_x = malloc(strlen(buffer) * sizeof(char));
 
-            if (rel_array->member == NULL) 
+            if (rel_array->member == NULL)
                 return 0;
-  
-            if (rel_array->member[rel_array->rel_size - 1].rel_x == NULL) 
+
+            if (rel_array->member[rel_array->rel_size - 1].rel_x == NULL)
                 return 0;
 
             for (int o = 0; o < uni_array->member_count; o++) {  //Checking if set member is declared in Universe
@@ -639,7 +660,7 @@ int load_relation(char *str_line, Rel_t *rel_array, Universe_t *uni_array) {
                 }            
             }
 
-            if (uni_cmp_success == false) 
+            if (uni_cmp_success == false)
                 return 0;
 
 
@@ -654,22 +675,22 @@ int load_relation(char *str_line, Rel_t *rel_array, Universe_t *uni_array) {
         if (c == ')' && bracket == true) {
             rel_array->member[rel_array->rel_size - 1].rel_y = malloc(strlen(buffer) * sizeof(char));
 
-            if (rel_array->member == NULL) 
+            if (rel_array->member == NULL)
                 return 0;
 
-   
-            if (rel_array->member[rel_array->rel_size - 1].rel_y == NULL) 
+
+            if (rel_array->member[rel_array->rel_size - 1].rel_y == NULL)
                 return 0;
 
             for (int o = 0; o < uni_array->member_count; o++) {  //Checking if set member is declared in Universe
                 if (strcmp(buffer, uni_array->uni_member[o]) == 0) {
                     rel_array->member[rel_array->rel_size - 1].rel_y_index = o;
-                    uni_cmp_success = true;   
+                    uni_cmp_success = true;
                 }            
             }
 
-            if (uni_cmp_success == false) 
-                return 0; 
+            if (uni_cmp_success == false)
+                return 0;
 
             strcpy(rel_array->member[rel_array->rel_size - 1].rel_y, buffer);
             bracket = false;
@@ -678,7 +699,7 @@ int load_relation(char *str_line, Rel_t *rel_array, Universe_t *uni_array) {
             buffer[0] = '\0';
         }
 
-        if (c != ' ' && c != ')' && c != '\0' && bracket == false) 
+        if (c != ' ' && c != ')' && c != '\0' && bracket == false)
             return 0;
 
     }
@@ -686,7 +707,7 @@ int load_relation(char *str_line, Rel_t *rel_array, Universe_t *uni_array) {
 
     for (int i = 0; i < rel_array->rel_size - 1; i++) {
         if (strcmp(rel_array->member[rel_array->rel_size - 1].rel_x, rel_array->member[i].rel_x) == 0 
-        &&  strcmp(rel_array->member[rel_array->rel_size - 1].rel_y, rel_array->member[i].rel_y) == 0) 
+        &&  strcmp(rel_array->member[rel_array->rel_size - 1].rel_y, rel_array->member[i].rel_y) == 0)
             return 0;
 
     }
@@ -825,7 +846,6 @@ int main(int argc, char* argv[])   {
     while (! (feof(fp))) {
         char *str_line = load_line(&fp);
         line_count++;
-
         if (line_count > max_line_count) {      //Checking the number of lines in file
             fprintf(stderr, "Error: Max number of lines surpassed\n");
             return EXIT_FAILURE;
@@ -898,7 +918,7 @@ int main(int argc, char* argv[])   {
                         return EXIT_FAILURE;
                     rel_count++;
                     rels_array = realloc(rels_array, rel_count * sizeof(Rel_t));
-                    
+
                     rels_array[rel_count - 1].rel_index = line_count;
 
                     if (load_relation(str_line, &rels_array[rel_count - 1], &uni_array) == 0) {
@@ -917,6 +937,10 @@ int main(int argc, char* argv[])   {
                 break;
 
             case 'C':               //Command Function
+                if (rel_count == 0 && set_count == 1){
+                    fprintf(stderr, "Error: No sets or relations");
+                    return EXIT_FAILURE;
+                }
                 if (line_count != 1) {
                     was_command = true;
                     if (! (second_char_check(str_line))) 
@@ -1157,7 +1181,7 @@ int main(int argc, char* argv[])   {
         free(sets_array->member[i].set_mem);
     }
     for(int i = 0; i < set_count; i++){
-        free(sets_array->member);
+        free(sets_array[i].member);
     }
     for(int i = 0; i < rels_array->rel_size; i++){
         free(rels_array->member[i].rel_x);
@@ -1177,7 +1201,7 @@ int main(int argc, char* argv[])   {
 
 
 void is_reflexive(Rel_t* rel_p, Universe_t* uni_p) {
-	
+
 	// Array of bools, where each element answers the question:
 	// "Is the universe member with my index related to itself?"
 	bool refl_arr[uni_p->member_count];
@@ -1298,10 +1322,16 @@ void is_transitive(Rel_t* rel_p, Universe_t* uni_p) {
 
 // BITFIELD STUFF--------------------------------------------------
 
+// How many bytes do you need to store n bits?
+int min_bytes(int n) {
+    int extra = (n % 8 == 0 ? 0 : 1);
+    return ((int)(n / 8.0)) + extra;
+}
+
 void rel_to_bitfield(Rel_t* rel_p, Universe_t* uni_p, Bitfield_t* field_p) {
     
     field_p->bit_len = uni_p->member_count * uni_p->member_count;
-    field_p->byte_len = min_bytes(field_p->bit_len);
+    field_p->byte_len = (int) ceil(field_p->bit_len / 8.0);
     field_p-> bytes = malloc(field_p->byte_len);
     
     for (int i = 0; i < field_p->byte_len; i++) { // Make every bit 0
@@ -1352,4 +1382,5 @@ void setflag2d(bool b, int y, int x, uint8_t* field_p, int bit_width) {
     int pos = y * bit_width + x;
     setflag(pos, b, field_p);
 }
+
 
