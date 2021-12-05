@@ -1,3 +1,4 @@
 U a b c
 S
-C empty 2
+S a b
+C subset 2 3

@@ -77,6 +77,11 @@ void set_card(Set_t * set){
 //print complement of set to the universe
 void set_complement(Set_t * setA, Universe_t * uni){
     printf("S");
+    if(setA->set_size == 0){
+        for(int i = 0; i < uni->member_count; i++) {
+            printf(" %s", uni->uni_member[i]);
+        }
+    }
     for(int i = 0; i < uni->member_count; i++) {
         int cmp = 0;
         for (int j = 0; j < setA->set_size; j++) {
@@ -95,8 +100,13 @@ void set_complement(Set_t * setA, Universe_t * uni){
 
 void set_union(Set_t * setA, Set_t * setB){
     printf("S");
+    if(setA->set_size == 0){
+        for(int i = 0; i < setB->set_size; i++) {
+            printf(" %s", setB->member[i].set_mem);
+        }
+    }
     for(int i = 0; i < setA->set_size; i++){
-        printf(" %s ", setA->member[i].set_mem);
+        printf(" %s", setA->member[i].set_mem);
     }
     for(int i = 0; i < setB->set_size; i++) {
         int cmp = 0;
@@ -122,7 +132,7 @@ void set_intersect(Set_t * setA, Set_t * setB){
                 cmp = 1;
             }
             if(cmp == 1 && j == (setA->set_size - 1)) {
-                printf(" %s ", setB->member[i].set_mem);
+                printf(" %s", setB->member[i].set_mem);
                 break;
             }
         }
@@ -152,6 +162,10 @@ void set_subseteq(Set_t * setA, Set_t * setB){
         printf("false\n");
         return;
     }
+    if(setA->set_size == 0){
+        printf("true\n");
+        return;
+    }
     int cmp = 0;
     for(int i = 0; i < setA->set_size; i++) {
         for (int j = 0; j < setB->set_size; j++) {
@@ -172,6 +186,10 @@ void set_subset(Set_t * setA, Set_t * setB){
         printf("false\n");
         return;
     }
+    if(setA->set_size == 0){
+        printf("true\n");
+        return;
+    }
     int cmp = 0;
     for(int i = 0; i < setA->set_size; i++) {
         for (int j = 0; j < setB->set_size; j++) {
@@ -190,6 +208,10 @@ void set_subset(Set_t * setA, Set_t * setB){
 void set_equals(Set_t * setA, Set_t * setB){
     if(setA->set_size != setB->set_size) {
         printf("false\n");
+        return;
+    }
+    if(setB->set_size == 0 && setA->set_size == 0){
+        printf("true\n");
         return;
     }
     int cmp = 0;
