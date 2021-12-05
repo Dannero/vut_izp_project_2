@@ -277,13 +277,6 @@ void setflag(int pos, bool b, uint8_t* flags);
 uint8_t getflag2d(int y, int x, uint8_t* field_p, int bit_width);
 void setflag2d(bool b, int y, int x, uint8_t* field_p, int bit_width);
 
-// How many bytes do you need to store n bits?
-int min_bytes(int n) {
-    int extra = (n % 8 == 0 ? 0 : 1);
-    return ((int)(n / 8.0)) + extra;
-}
-
-
 
 //RELATION FUNCTION DOMAIN
 void rel_domain(Rel_t* relA)
@@ -1331,7 +1324,7 @@ int min_bytes(int n) {
 void rel_to_bitfield(Rel_t* rel_p, Universe_t* uni_p, Bitfield_t* field_p) {
     
     field_p->bit_len = uni_p->member_count * uni_p->member_count;
-    field_p->byte_len = (int) ceil(field_p->bit_len / 8.0);
+    field_p->byte_len = min_bytes(field_p->bit_len);
     field_p-> bytes = malloc(field_p->byte_len);
     
     for (int i = 0; i < field_p->byte_len; i++) { // Make every bit 0
