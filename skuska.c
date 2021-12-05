@@ -786,6 +786,10 @@ int main(int argc, char* argv[])   {
                         return EXIT_FAILURE;
 
                     load_universe(str_line, &uni_load_fail, &uni_array); //Loading line into Universe arrays
+                    set_count++;
+                    sets_array = realloc(sets_array, set_count * sizeof(Set_t));
+                    sets_array[set_count - 1].set_index = line_count;
+                    load_set(str_line, &set_load_fail, &sets_array[set_count - 1], &uni_array);
 
                     if (uni_load_fail == true)                         
                         return EXIT_FAILURE; 
