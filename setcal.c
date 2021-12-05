@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdint.h>
-//#include <math.h>
+
 
 #define argument_count 2
 #define max_member_len 30
@@ -246,6 +246,7 @@ void is_reflexive(Rel_t* rel_p, Universe_t* uni_p);
 void is_symmetric(Rel_t* rel_p, Universe_t* uni_p);
 void is_antisymmetric(Rel_t* rel_p, Universe_t* uni_p);
 void is_transitive(Rel_t* rel_p, Universe_t* uni_p);
+void is_function(Rel_t* rel_p, Universe_t* uni_p);
 
 void relation_ctor(Rel_t* relation);
 void rel_to_bitfield(Rel_t* rel_p, Universe_t* uni_p, Bitfield_t* field_p);
@@ -1182,62 +1183,43 @@ int main(int argc, char* argv[])   {
 
 void is_reflexive(Rel_t* rel_p, Universe_t* uni_p) {
 	
-	// Array of bools, where each element answers the question:
-	// "Is the universe member with my index related to itself?"
-	bool refl_arr[uni_p->member_count];
-	for (int i = 0; i < uni_p->member_count; i++) {
-		refl_arr[i] = false;
-	}
+	Bitfield_t rel2d;
+    rel_to_bitfield(rel_p, uni_p, &rel2d);
 	
-	// Loop through each relation member
-	for (int i = 0; i < rel_p->rel_size; i++) {
-		
-		Rel_member_t* member_p = &(rel_p->member[i]);
-
-		// If this universe member already is related to itself
-		if (refl_arr[member_p->rel_x_index] == true) {
-			continue;
-		}
-		
-		// If it isn't related to itself, maybe it will be related now
-		if (member_p->rel_x_index == member_p->rel_y_index) {
-			
-			refl_arr[member_p->rel_x_index] = (member_p->rel_x_index == member_p->rel_y_index);
-		}
-	}
-	
-	// If refl_arr is filled with only trues, it means that every universe member 
-	// is related to itself
+	// every element on the diagonal must be a "1"
 	for (int i = 0; i < uni_p->member_count; i++) {
-		if (refl_arr[i] == false) { 
-		    fprintf(stdout, "false\n");
-		    return;
+		if (getflag2d(i, i, rel2d.bytes, uni_p->member_count) == 0) {
+			fprintf(stdout, "false");
+			free(rel2d.bytes);
+			return;
 		}
 	}
-	fprintf(stdout, "true\n");
+	fprintf(stdout, "true");
+    free(rel2d.bytes);
 }
 
 void is_symmetric(Rel_t* rel_p, Universe_t* uni_p) {
+    
     Bitfield_t rel2d;
     rel_to_bitfield(rel_p, uni_p, &rel2d);
     
-    // Check only the diagonal
+    // Check each element
     for (int x = 0; x < uni_p->member_count; x++) {
         for (int y = 0; y < uni_p->member_count; y++) {
             
             bool a = getflag2d(y, x, rel2d.bytes, uni_p->member_count);
             bool b = getflag2d(x, y, rel2d.bytes, uni_p->member_count);
             
-            // for every a: aRa 
+            // for every a: a must be related to a
             if (a != b) {
                     
-                    printf("false\n");
+                    fprintf(stdout, "false");
                     free(rel2d.bytes);
                     return;
                 }
         }
     }
-    printf("true\n");
+    fprintf(stdout, "true");
     free(rel2d.bytes);
 }
 
@@ -1245,7 +1227,6 @@ void is_antisymmetric(Rel_t* rel_p, Universe_t* uni_p) {
     
     Bitfield_t rel2d;
     rel_to_bitfield(rel_p, uni_p, &rel2d);
-    
     
     // Check for symmetries "along a triangle"
     for (int y = 0; y < uni_p->member_count; y++) {
@@ -1278,29 +1259,73 @@ void is_transitive(Rel_t* rel_p, Universe_t* uni_p) {
         // representing the 2nd component of the relation 
         // represented by this "1".
         for (int x = 0; x < uni_p->member_count; x++) {
-            
-            if (getflag2d(y, x, rel2d.bytes, rel_p->rel_size) != 0) {
+                  
+            // if aRb
+            if (getflag2d(y, x, rel2d.bytes, uni_p->member_count) != 0) {
                 
-                printf("found relation at %d, %d:\n", y, x);
-                int b_row_y = x;
-                
-                for (int b_x = 0; b_x < uni_p->member_count; b_x++) {
+                for (int z = 0; z < uni_p->member_count; z++) {
                     
-                    bool is_related = getflag2d(b_row_y, b_x, rel2d.bytes, rel_p->rel_size);
-                    printf("%d,%d: %d | ", b_row_y, b_x, is_related);
+                    // if bRc 
+                    bool bRc = getflag2d(x, z, rel2d.bytes, uni_p->member_count);
+                    if (bRc != 0) {
+
+                        bool aRc = getflag2d(y, z, rel2d.bytes, uni_p->member_count);
+
+                        if (aRc) { // aRb and bRc and aRc
+                            //printf("(%d, %d) and (%d, %d) AND (%d, %d)\n", y, x, x, z, y, z);
+                        }
+                        else { // aRb and bRc but not aRc
+                            //printf("(%d, %d) and (%d, %d) BUT NO (%d, %d)\n", y, x, x, z, y, z);
+                            
+                            printf("false");
+                            free(rel2d.bytes);
+                            return;
+                        }
+                    } 
                 }
-                printf("\n\n");
             }
             
         }
-        
     }
-    
+    printf("true");
+    free(rel2d.bytes);
 }
 
+void is_function(Rel_t* rel_p, Universe_t* uni_p) {
+    
+    Bitfield_t rel2d;
+    rel_to_bitfield(rel_p, uni_p, &rel2d);
+    
+    // For each first component (y) is there only one second component (x)?
+    for (int y = 0; y < uni_p->member_count; y++) {
+        
+        int rel_c = 0; // How many relations is this component in?
+        
+        for (int x = 0; x < uni_p->member_count; x++) {
+            if (getflag2d(y, x, rel2d.bytes, uni_p->member_count) != 0) {
+                rel_c++;
+                if (rel_c > 1) {
+                    printf("false");
+                    free(rel2d.bytes);
+                    return;
+                }
+            }
+        }
+    }
+    printf("true");
+    free(rel2d.bytes);
+}
 
-// BITFIELD STUFF--------------------------------------------------
+// BITFIELD MANIPULATION RELATED FUNCTIONS
 
+// Turns a relation into a 2d bitfield. For example:
+// universe: has 3 elemens
+// relation: { (0,0), (0,1), (1,2) } will become:
+// 110
+// 001
+// 000
+// In this case, the bitfield will be made of 2 bytes and will look 
+// like this in memory: [11000100][00000000], the last 7 bits are useless.
 void rel_to_bitfield(Rel_t* rel_p, Universe_t* uni_p, Bitfield_t* field_p) {
     
     field_p->bit_len = uni_p->member_count * uni_p->member_count;
@@ -1319,6 +1344,8 @@ void rel_to_bitfield(Rel_t* rel_p, Universe_t* uni_p, Bitfield_t* field_p) {
     }
 }
 
+// Returns what the parent byte of the bit on pos looks like, except besides pos 
+// has been force-set to zero.
 uint8_t getflag(int pos, uint8_t* flags) {
 	 int bindex = (int)(pos / 8.0); // Which byte from the left?
 	
@@ -1345,6 +1372,8 @@ void setflag(int pos, bool b, uint8_t* flags) {
 	}
 }
 
+// If you imagine the bit field field_p as a 2d array with the given width, 
+// what is the flag on the given coordinates?
 uint8_t getflag2d(int y, int x, uint8_t* field_p, int bit_width) {
     int pos = y * bit_width + x;
     
@@ -1355,4 +1384,6 @@ void setflag2d(bool b, int y, int x, uint8_t* field_p, int bit_width) {
     int pos = y * bit_width + x;
     setflag(pos, b, field_p);
 }
+
+
 
