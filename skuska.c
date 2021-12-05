@@ -783,6 +783,7 @@ int main(int argc, char* argv[])   {
     bool set_load_fail = false;
     bool rel_load_fail = false;
     bool command_load_fail = false;
+    bool was_command = false;
 
     Universe_t uni_array;
     Set_t *sets_array = malloc(sizeof(Set_t));
@@ -828,6 +829,10 @@ int main(int argc, char* argv[])   {
 
             case 'S':               //Set Function
                 if (line_count != 1) {
+                    if (was_command == true) {
+                        fprintf(stderr, "Error: Set line after command line\n");
+                        return EXIT_FAILURE;
+                    }
                     if (! (second_char_check(str_line))) 
                         return EXIT_FAILURE;
                     set_count++;
@@ -854,6 +859,10 @@ int main(int argc, char* argv[])   {
 
             case 'R':               //Relation Function
                 if (line_count != 1) {
+                    if (was_command == true) {
+                        fprintf(stderr, "Error: Relation line after command line\n");
+                        return EXIT_FAILURE;
+                    }
                     if (! (second_char_check(str_line))) 
                         return EXIT_FAILURE;
                     rel_count++;
@@ -876,6 +885,7 @@ int main(int argc, char* argv[])   {
 
             case 'C':               //Command Function
                 if (line_count !=1) {
+                    was_command = true;
                     if (! (second_char_check(str_line))) 
                         return EXIT_FAILURE;
                     command_count++;
