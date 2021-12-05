@@ -20,8 +20,6 @@ typedef struct {        //Array of universe members
     int member_count;
 } Universe_t;
 
-Universe_t uni_array;
-
 
 //SET STRUCTURES//
 
@@ -35,9 +33,6 @@ typedef struct {
     int set_size;
     long set_index;
 } Set_t;
-
-Set_t *sets_array;
-
 
 
 //RELATION STRUCTURES//
@@ -54,7 +49,6 @@ typedef struct {        //Relation array
     int rel_index;
 } Rel_t;
 
-Rel_t *rels_array;
 
 ////COMMAND STRUCTURE/////
 typedef struct {        //Structure for command loading
@@ -62,8 +56,6 @@ typedef struct {        //Structure for command loading
     long  command_arg[3];
     int size;
  } Command_t;
-
- 
 
 
     //////SET FUNCTIONS//////
@@ -239,7 +231,7 @@ void rel_codomain(Rel_t* relA)
 }
 
 //RELATION FUNCTION INJECTIVE
-int rel_inject(Rel_t *r)
+int rel_inject(Rel_t *r, Universe_t uni_array)
 {
     int *pv;
     int b = 1;
@@ -270,7 +262,7 @@ int rel_inject(Rel_t *r)
 
 //RELATION FUNCTION SURJECTIVE
 
-int rel_surject(Rel_t *r)
+int rel_surject(Rel_t *r, Universe_t uni_array)
 {
     int *pv;
     int b = 1;
@@ -305,9 +297,9 @@ int rel_surject(Rel_t *r)
 }
 
 //RELATION FUNCTION BIJECTIVE
-void rel_biject(Rel_t *r)
+void rel_biject(Rel_t *r, Universe_t uni_array)
 {
-    if(rel_inject(r) && rel_surject(r))
+    if(rel_inject(r, uni_array) && rel_surject(r, uni_array))
     {
         printf("true\n");
     }
@@ -342,7 +334,7 @@ char *load_line(FILE **fp) {
     if (line_str == NULL) 
         return NULL;
     return line_str;
-    free(line_str);
+
 }
 
 
@@ -417,7 +409,7 @@ void load_universe(char *str_line, bool *uni_load_fail, Universe_t *uni_array) {
 
         if (c == ' ' || c == '\0') {    //if char is SPACE, loading into buffer ends and buffer is loaded into the universe structure
             uni_array->member_count++;
-            uni_array->uni_member = realloc(uni_array->uni_member, uni_array->member_count * sizeof(char));            
+            uni_array->uni_member = realloc(uni_array->uni_member, uni_array->member_count * sizeof(char*));
             uni_array->uni_member[uni_array->member_count - 1] = malloc(strlen(buffer) * sizeof(char));   
                 if (uni_array->uni_member == NULL) {
                     fprintf(stderr, "Error occured during universe array memory allocation\n");
@@ -433,16 +425,16 @@ void load_universe(char *str_line, bool *uni_load_fail, Universe_t *uni_array) {
 
             
 
-            for (int i = 0; i < uni_array->member_count - 1; i++) {   //Comparing strings with previous strings saved into the array
-                if (strcmp(uni_array->uni_member[uni_array->member_count - 1], uni_array->uni_member[i]) == 0) {
+            for (int o = 0; o < uni_array->member_count - 1; o++) {   //Comparing strings with previous strings saved into the array
+                if (strcmp(uni_array->uni_member[uni_array->member_count - 1], uni_array->uni_member[o]) == 0) {
                     fprintf(stderr, "Error: Multiple equal universe members\n");
                     *uni_load_fail = true;
                     break;
                 }        
             }
             
-            for (int i = 0; i < illegal_str_count; i++) {        //Parsing through illegal strings
-                if (strcmp(buffer, illegal_strings[i]) == 0) {
+            for (int o = 0; o < illegal_str_count; o++) {        //Parsing through illegal strings
+                if (strcmp(buffer, illegal_strings[o]) == 0) {
             
                     fprintf(stderr, "Error: Illegal strings used\n");
                     *uni_load_fail = true;
@@ -508,17 +500,17 @@ void load_set (char *str_line, bool *set_load_fail, Set_t *set_array, Universe_t
             strcpy(set_array->member[set_array->set_size - 1].set_mem, buffer);     
 
             
-            for (int i = 0; i < set_array->set_size - 1; i++) {  //Comparing strings with previous strings saved into the array
-                if (strcmp(set_array->member[set_array->set_size - 1].set_mem, set_array->member[i].set_mem) == 0) {
+            for (int o = 0; o < set_array->set_size - 1; o++) {  //Comparing strings with previous strings saved into the array
+                if (strcmp(set_array->member[set_array->set_size - 1].set_mem, set_array->member[o].set_mem) == 0) {
                     fprintf(stderr, "Error: Multiple equal set members\n");
                     *set_load_fail = true;
                     break;
                 }
             }
             
-            for (int i = 0; i < uni_array->member_count; i++) {  //Checking if set member is declared in Universe
-                if (strcmp(buffer, uni_array->uni_member[i]) == 0) {
-                    set_array->member[set_array->set_size - 1].set_mem_num = i;
+            for (int o = 0; o < uni_array->member_count; o++) {  //Checking if set member is declared in Universe
+                if (strcmp(buffer, uni_array->uni_member[o]) == 0) {
+                    set_array->member[set_array->set_size - 1].set_mem_num = o;
                     uni_cmp_success = true;
                     break;
                 }            
@@ -588,9 +580,9 @@ void load_relation(char *str_line, bool *rel_load_fail, Rel_t *rel_array, Univer
                 *rel_load_fail = true;
                 break;
             }
-            for (int i = 0; i < uni_array->member_count; i++) {  //Checking if set member is declared in Universe
-                if (strcmp(buffer, uni_array->uni_member[i]) == 0) {
-                    rel_array->member[rel_array->rel_size - 1].rel_x_index = i;
+            for (int o = 0; o < uni_array->member_count; o++) {  //Checking if set member is declared in Universe
+                if (strcmp(buffer, uni_array->uni_member[o]) == 0) {
+                    rel_array->member[rel_array->rel_size - 1].rel_x_index = o;
                     uni_cmp_success = true;
                     break;
                 }            
@@ -621,9 +613,9 @@ void load_relation(char *str_line, bool *rel_load_fail, Rel_t *rel_array, Univer
                 *rel_load_fail = true;
                 break;
             }
-            for (int i = 0; i < uni_array->member_count; i++) {  //Checking if set member is declared in Universe
-                if (strcmp(buffer, uni_array->uni_member[i]) == 0) {
-                    rel_array->member[rel_array->rel_size - 1].rel_y_index = i;
+            for (int o = 0; o < uni_array->member_count; o++) {  //Checking if set member is declared in Universe
+                if (strcmp(buffer, uni_array->uni_member[o]) == 0) {
+                    rel_array->member[rel_array->rel_size - 1].rel_y_index = o;
                     uni_cmp_success = true;
                     break;
                 }            
@@ -753,8 +745,8 @@ int main(int argc, char* argv[])   {
     fp = fopen(argv[1],"r");
     //File opening check
     if (fp == NULL) {
-        return EXIT_FAILURE;
         fprintf(stderr,"Error: Opening file not successful\n");
+        return EXIT_FAILURE;
     }
 
     (void) argc;
@@ -769,10 +761,11 @@ int main(int argc, char* argv[])   {
     bool set_load_fail = false;
     bool rel_load_fail = false;
     bool command_load_fail = false;
-    
+
+    Universe_t uni_array;
     Set_t *sets_array = malloc(sizeof(Set_t));
     Rel_t *rels_array = malloc(sizeof(Rel_t));
-    Command_t * commands = malloc(sizeof(Command_t));
+    Command_t *commands = malloc(sizeof(Command_t));
 
 
 
@@ -995,7 +988,7 @@ int main(int argc, char* argv[])   {
                             return EXIT_FAILURE;
                         else {
                             if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1) {
-                                if (rel_inject(&rels_array[commands[command_count - 1].command_arg[0]]) != 0) 
+                                if (rel_inject(&rels_array[commands[command_count - 1].command_arg[0]], uni_array) != 0) 
                                     printf("true\n");
                                 else printf("false\n");
                             }    
@@ -1008,7 +1001,7 @@ int main(int argc, char* argv[])   {
                             return EXIT_FAILURE;
                         else {
                             if (rel_index_check(commands[command_count - 1], rels_array, rel_count, 0) != -1) {
-                                if (rel_surject(&rels_array[commands[command_count - 1].command_arg[0]]) != 0) 
+                                if (rel_surject(&rels_array[commands[command_count - 1].command_arg[0]], uni_array) != 0) 
                                     printf("true\n");
                                 else printf("false\n");
                             }    
@@ -1019,18 +1012,15 @@ int main(int argc, char* argv[])   {
                     if (strcmp("bijective", commands[command_count -1].command_string) == 0) {
                         if (command_arg_check(&commands[command_count -1], 1) == 0)
                             return EXIT_FAILURE;
-                        else rel_biject(&rels_array[commands[command_count -1].command_arg[0]]);
-
+                        else rel_biject(&rels_array[commands[command_count -1].command_arg[0]], uni_array);
                     }          
 
+                    //RELATION FUNCTIONS WITH 2 ARGUMENTS//
 
 
 
 
-
-                    //find_and_do_command
-
-
+                    //COMBINED FUNCTIONS//
                 }
 
                 else {
@@ -1042,36 +1032,34 @@ int main(int argc, char* argv[])   {
             case '\0': return 0;
 
             default:                //Invalid function
-                fprintf(stderr, "Error: Invalid Function at line %d\n", line_count);
+                fprintf(stderr, "Error: Invalid Function at line %ld\n", line_count);
                 return EXIT_FAILURE;
-                break;
         }
+        free(str_line);
     }
-
-    //CLEARING MEMORY//
     for(int i = 0; i < command_count; i++){
-            free(commands[i].command_string);
-        }
-        for(int i = 0; i < uni_array.member_count; i++){
-            free(uni_array.uni_member[i]);
-        }
-        for(int i = 0; i < sets_array->set_size; i++){
-            free(sets_array->member[i].set_mem);
-        }
-        for(int i = 0; i < set_count; i++){
-            free(sets_array->member);
-        }
-        for(int i = 0; i < rels_array->rel_size; i++){
-            free(rels_array->member[i].rel_x);
-            free(rels_array->member[i].rel_y);
-        }
-        for(int i = 0; i < rel_count; i++){
-            free(rels_array[i].member);
-        }
-        free(rels_array);
-        free(sets_array);
-        free(uni_array.uni_member);
-        free(commands);
-        fclose(fp);
+        free(commands[i].command_string);
+    }
+    for(int i = 0; i < uni_array.member_count; i++){
+        free(uni_array.uni_member[i]);
+    }
+    for(int i = 0; i < sets_array->set_size; i++){
+        free(sets_array->member[i].set_mem);
+    }
+    for(int i = 0; i < set_count; i++){
+        free(sets_array->member);
+    }
+    for(int i = 0; i < rels_array->rel_size; i++){
+        free(rels_array->member[i].rel_x);
+        free(rels_array->member[i].rel_y);
+    }
+    for(int i = 0; i < rel_count; i++){
+        free(rels_array[i].member);
+    }
+    free(rels_array);
+    free(sets_array);
+    free(uni_array.uni_member);
+    free(commands);
+    fclose(fp);
     return 0;
 }
